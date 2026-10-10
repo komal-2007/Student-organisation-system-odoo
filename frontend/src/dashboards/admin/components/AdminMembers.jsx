@@ -56,6 +56,14 @@ const IconFilter = () => (
     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
   </Icon>
 );
+const IconTrash = () => (
+  <Icon size={15}>
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <line x1="10" y1="11" x2="10" y2="17"></line>
+    <line x1="14" y1="11" x2="14" y2="17"></line>
+  </Icon>
+);
 
 /* ── Filter Tabs ── */
 const STATUS_TABS = [
@@ -82,6 +90,7 @@ export function AdminMembers({ members: initialMembers }) {
   
   const [detailMember, setDetailMember] = useState(null);
   const [editRoleMember, setEditRoleMember] = useState(null);
+  const [removeConfirmMember, setRemoveConfirmMember] = useState(null);
   const [newRole, setNewRole] = useState('');
   const [newDept, setNewDept] = useState('');
   
@@ -131,6 +140,13 @@ export function AdminMembers({ members: initialMembers }) {
     setMembers(prev => prev.map(m => m.id === id ? { ...m, status: 'Inactive' } : m));
     const target = members.find(m => m.id === id);
     flash(`Rejected membership for ${target?.name} (mock)`);
+  };
+
+  const handleRemoveMember = () => {
+    if (!removeConfirmMember) return;
+    setMembers(prev => prev.filter(m => m.id !== removeConfirmMember.id));
+    flash(`Removed member ${removeConfirmMember.name} (mock)`);
+    setRemoveConfirmMember(null);
   };
 
   const openEditRoleModal = (m) => {
@@ -260,9 +276,14 @@ export function AdminMembers({ members: initialMembers }) {
                             Protected
                           </button>
                         ) : (
-                          <button className="btn-table" title="Edit Role & Dept" onClick={() => openEditRoleModal(mem)}>
-                            <IconEdit />
-                          </button>
+                          <>
+                            <button className="btn-table" title="Edit Role & Dept" onClick={() => openEditRoleModal(mem)}>
+                              <IconEdit />
+                            </button>
+                            <button className="btn-table" title="Remove Member" onClick={() => setRemoveConfirmMember(mem)} style={{ color: '#D92D20' }}>
+                              <IconTrash />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -365,6 +386,29 @@ export function AdminMembers({ members: initialMembers }) {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* Remove Confirm Modal */}
+      {removeConfirmMember && (
+        <div className="admin-events-overlay" onClick={() => setRemoveConfirmMember(null)}>
+          <div className="admin-events-modal admin-events-modal-sm" onClick={e => e.stopPropagation()}>
+            <div className="admin-events-modal-header">
+              <h3 className="admin-events-modal-title">Remove Member</h3>
+              <button className="admin-events-modal-close" onClick={() => setRemoveConfirmMember(null)}><IconX /></button>
+            </div>
+            <div style={{ padding: '0 24px 24px' }}>
+              <p style={{ margin: 0, fontSize: 13.5, color: '#101426', lineHeight: 1.5 }}>
+                Are you sure you want to remove <strong>{removeConfirmMember.name}</strong> from the organization? This action cannot be undone.
+              </p>
+              <div className="admin-events-modal-actions" style={{ marginTop: 24 }}>
+                <button className="btn-table" onClick={() => setRemoveConfirmMember(null)}>Cancel</button>
+                <button className="btn-create-event" style={{ background: '#D92D20', color: '#fff' }} onClick={handleRemoveMember}>
+                  Remove Member
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
