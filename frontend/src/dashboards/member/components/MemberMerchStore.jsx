@@ -20,6 +20,7 @@ const IconCheck = () => (
 export function MemberMerchStore({ catalog = [], myOrders = [] }) {
   const [orders, setOrders] = useState(myOrders);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [pickupLocation, setPickupLocation] = useState('Club Room 204 (Wed 4:00 PM – 6:00 PM)');
   const [orderComplete, setOrderComplete] = useState(false);
 
   const handlePlaceOrder = (e) => {
@@ -31,7 +32,7 @@ export function MemberMerchStore({ catalog = [], myOrders = [] }) {
       price: selectedItem.price,
       orderDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
       status: 'Processing',
-      pickupLocation: 'Club Room 204 (Wed 4-6 PM)',
+      pickupLocation: pickupLocation || 'Club Room 204 (Wed 4-6 PM)',
     };
     setOrders((prev) => [newOrder, ...prev]);
     setOrderComplete(true);
@@ -188,7 +189,12 @@ export function MemberMerchStore({ catalog = [], myOrders = [] }) {
 
                 <div className="form-group">
                   <label>Pickup Location</label>
-                  <input type="text" readOnly value="Club Room 204 (Wed 4:00 PM – 6:00 PM)" />
+                  <input
+                    type="text"
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E6F0' }}
+                  />
                 </div>
 
                 <div className="skyline-modal-footer">

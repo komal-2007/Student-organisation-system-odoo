@@ -271,11 +271,11 @@ export function AdminDashboard() {
           {activeSection === 'overview' && <AdminOverview data={adminData} />}
           {activeSection === 'finance' && <AdminFinance financeData={adminData.financeSummary} />}
           {activeSection === 'reimbursements' && <AdminReimbursements initialQueue={adminData.reimbursementQueue} />}
-          {activeSection === 'events' && <AdminEvents />}
+          {activeSection === 'events' && <AdminEvents events={adminData.events} eventAttendees={adminData.eventAttendees} />}
           {activeSection === 'members' && <AdminMembers members={adminData.members} />}
           {activeSection === 'volunteers' && <AdminVolunteers tasks={adminData.volunteerTasks} />}
           {activeSection === 'fundraising' && <AdminFundraising campaigns={adminData.fundraisingCampaigns} />}
-          {activeSection === 'announcements' && <AdminAnnouncements />}
+          {activeSection === 'announcements' && <AdminAnnouncements announcements={adminData.announcements} />}
         </div>
       </div>
     </div>
