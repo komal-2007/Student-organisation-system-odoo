@@ -228,7 +228,7 @@ export function AdminDashboard() {
             <p className="page-subtitle">{current.subtitle}</p>
           </div>
           {activeSection === 'overview' && (
-            <button className="btn-create-event">+ Create Event</button>
+            <button className="btn-create-event" onClick={() => setActiveSection('events')}>+ Create Event</button>
           )}
         </div>
 

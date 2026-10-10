@@ -134,6 +134,10 @@ export function AdminMembers({ members: initialMembers }) {
   };
 
   const openEditRoleModal = (m) => {
+    if (m.role.includes('President') || m.id === 'mem-1') {
+      flash('President / Admin role cannot be modified.');
+      return;
+    }
     setEditRoleMember(m);
     setNewRole(m.role);
     setNewDept(m.department);
@@ -246,6 +250,15 @@ export function AdminMembers({ members: initialMembers }) {
                               Reject
                             </button>
                           </>
+                        ) : mem.role.includes('President') ? (
+                          <button
+                            className="btn-table"
+                            disabled
+                            style={{ opacity: 0.5, cursor: 'not-allowed', background: '#F4F5FB', color: '#667085' }}
+                            title="President / Admin role cannot be modified"
+                          >
+                            Protected
+                          </button>
                         ) : (
                           <button className="btn-table" title="Edit Role & Dept" onClick={() => openEditRoleModal(mem)}>
                             <IconEdit />

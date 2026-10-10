@@ -113,7 +113,8 @@ export function AdminEvents({ events: initialEvents, eventAttendees }) {
         e.title.toLowerCase().includes(q) ||
         e.venue.toLowerCase().includes(q) ||
         e.category.toLowerCase().includes(q) ||
-        e.organizer.toLowerCase().includes(q)
+        e.organizer.toLowerCase().includes(q) ||
+        e.date.toLowerCase().includes(q)
       );
     }
     return list;
@@ -161,8 +162,13 @@ export function AdminEvents({ events: initialEvents, eventAttendees }) {
 
   const validate = () => {
     const errs = {};
+    const todayStr = new Date().toISOString().split('T')[0];
     if (!form.title.trim()) errs.title = 'Title is required';
-    if (!form.date) errs.date = 'Date is required';
+    if (!form.date) {
+      errs.date = 'Date is required';
+    } else if (form.date < todayStr) {
+      errs.date = 'Event date cannot be in the past';
+    }
     if (!form.time) errs.time = 'Time is required';
     if (!form.venue.trim()) errs.venue = 'Venue is required';
     if (!form.capacity || isNaN(form.capacity) || Number(form.capacity) < 1)
@@ -384,6 +390,7 @@ export function AdminEvents({ events: initialEvents, eventAttendees }) {
                 <div className="form-field">
                   <label>Date <span className="req">*</span></label>
                   <input type="date" value={form.date}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={e => handleChange('date', e.target.value)} />
                   {formErrors.date && <span className="form-error">{formErrors.date}</span>}
                 </div>

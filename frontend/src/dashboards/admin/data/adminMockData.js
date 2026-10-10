@@ -15,8 +15,8 @@
 
 export const ADMIN_MOCK_DATA = {
   stats: {
-    totalMembers: 142,
-    activeEvents: 8,
+    totalMembers: 20,
+    activeEvents: 6,
     treasuryBalance: "$12,450.00",
     pendingApprovals: 5,
     fundraisingTotal: "$8,950.00",
