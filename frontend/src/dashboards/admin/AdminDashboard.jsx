@@ -111,11 +111,14 @@ const NAV_ITEMS = [
   { id: 'volunteers', label: 'Volunteers', icon: IconVolunteers },
 ];
 
+import { useAuth } from '../../services/auth/AuthContext';
+
 /**
  * DASHBOARD 1: Admin / Club President
  * Role-restricted executive command center for club administration.
  */
 export function AdminDashboard() {
+  const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [adminData] = useState(ADMIN_MOCK_DATA);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -212,9 +215,13 @@ export function AdminDashboard() {
               </button>
               {profileOpen && (
                 <div className="dropdown-panel profile-panel">
-                  <div className="dropdown-item">My Profile</div>
-                  <div className="dropdown-item">Settings</div>
-                  <div className="dropdown-item">Sign Out</div>
+                  <div className="dropdown-item" onMouseDown={(e) => { e.stopPropagation(); alert('My Profile (Mock)'); setProfileOpen(false); }}>My Profile</div>
+                  <div className="dropdown-item" onMouseDown={(e) => { e.stopPropagation(); alert('Settings (Mock)'); setProfileOpen(false); }}>Settings</div>
+                  <div className="dropdown-item" onMouseDown={async (e) => { 
+                    e.stopPropagation(); 
+                    setProfileOpen(false); 
+                    await logout(); 
+                  }}>Sign Out</div>
                 </div>
               )}
             </div>

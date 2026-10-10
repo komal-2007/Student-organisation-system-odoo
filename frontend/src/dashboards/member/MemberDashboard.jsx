@@ -107,7 +107,10 @@ const MEMBER_NAV_ITEMS = [
  * Personalized portal for authenticated student members.
  * Strictly isolates personal data; contains NO admin ledgers or approvals.
  */
+import { useAuth } from '../../services/auth/AuthContext';
+
 export function MemberDashboard() {
+  const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState('overview');
   const [memberData] = useState(MEMBER_MOCK_DATA);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -254,30 +257,30 @@ export function MemberDashboard() {
                     className="dropdown-item"
                     onMouseDown={(e) => {
                       e.stopPropagation();
-                      setActiveSection('membership');
+                      alert('My Profile (Mock)');
                       setProfileOpen(false);
                     }}
                   >
-                    My Digital Pass
+                    My Profile
                   </button>
                   <button
                     type="button"
                     className="dropdown-item"
                     onMouseDown={(e) => {
                       e.stopPropagation();
-                      setActiveSection('reimbursements');
+                      alert('Settings (Mock)');
                       setProfileOpen(false);
                     }}
                   >
-                    My Claims
+                    Settings
                   </button>
                   <button
                     type="button"
                     className="dropdown-item"
-                    onMouseDown={(e) => {
+                    onMouseDown={async (e) => {
                       e.stopPropagation();
                       setProfileOpen(false);
-                      alert('Signed out successfully.');
+                      await logout();
                     }}
                   >
                     Sign Out
