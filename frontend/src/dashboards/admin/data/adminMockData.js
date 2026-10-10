@@ -120,7 +120,7 @@ export const ADMIN_MOCK_DATA = {
   ],
 
   members: [
-    { id: "mem-1", name: "Komal Bhatia", role: "President / Admin", email: "komal@campus.edu", phone: "+1 (555) 019-2831", department: "Executive", status: "Active", joinedDate: "Sep 2024", studentId: "SKY-2024-001" },
+    { id: "mem-1", name: "Komal", role: "President / Admin", email: "komal@campus.edu", phone: "+1 (555) 019-2831", department: "Executive", status: "Active", joinedDate: "Sep 2024", studentId: "SKY-2024-001" },
     { id: "mem-2", name: "Sarah Jenkins", role: "Vice President", email: "sarah@campus.edu", phone: "+1 (555) 014-9920", department: "Operations", status: "Active", joinedDate: "Jan 2025", studentId: "SKY-2025-042" },
     { id: "mem-3", name: "Alex Rivera", role: "Treasurer", email: "alex@campus.edu", phone: "+1 (555) 018-3341", department: "Finance", status: "Active", joinedDate: "Sep 2025", studentId: "SKY-2025-108" },
     { id: "mem-4", name: "David Chen", role: "Member", email: "david@campus.edu", phone: "+1 (555) 012-7711", department: "Tech", status: "Pending Approval", joinedDate: "Oct 2026", studentId: "SKY-2026-210", notes: "Applied for Tech Lead role" },
