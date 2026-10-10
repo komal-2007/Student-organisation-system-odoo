@@ -7,19 +7,26 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "tsx --test src/health.test.ts",
-    "prisma:generate": "prisma generate"
+    "test": "tsx --test src/health.test.ts src/jwt.test.ts src/api.members.test.ts src/api.events.test.ts",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate --config prisma7.config.ts",
+    "prisma:migrate": "prisma migrate dev --config prisma7.config.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy --config prisma7.config.ts"
   },
   "keywords": [],
   "license": "ISC",
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "express": "^5.3.0",
-    "pg": "^8.23.1"
+    "jose": "^6.2.12",
+    "pg": "^8.23.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
