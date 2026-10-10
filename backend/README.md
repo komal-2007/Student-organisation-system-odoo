@@ -29,7 +29,7 @@ Required to **start the HTTP server** (`npm run dev` / `npm start`):
 | `CORS_ORIGIN` | Single allowed browser origin (no wildcard) |
 | `SUPABASE_URL` and/or `SUPABASE_JWT_SECRET` | JWT verification (JWKS and/or legacy HS256) |
 
-Also set `DIRECT_URL` for Prisma CLI. Optional: `JWT_JWKS_URL`, `JWT_ISSUER`, `JWT_AUDIENCE` (default `authenticated`), `MEMBERSHIP_DUES_AMOUNT`, `MEMBERSHIP_PERIOD_DAYS`.
+Also set `DIRECT_URL` for Prisma CLI. Optional: `JWT_JWKS_URL`, `JWT_ISSUER`, `JWT_AUDIENCE` (default `authenticated`), `MEMBERSHIP_DUES_AMOUNT`, `MEMBERSHIP_PERIOD_DAYS`, and the Razorpay keys below.
 
 2. Install dependencies and generate the Prisma client:
 
@@ -72,6 +72,20 @@ There is no development auth bypass. If JWT verification is not configured, auth
 
 Application users are **not** auto-created from a token. A valid token for an unknown `sub` yields `404` on `/api/me/profile`.
 
+## Razorpay
+
+Online checkout is optional. The HTTP server still starts if these are unset; checkout and webhook routes then return `503`.
+
+| Variable | Purpose |
+|---|---|
+| `RAZORPAY_KEY_ID` | Publishable key returned to the browser with a created order |
+| `RAZORPAY_KEY_SECRET` | Server secret for order APIs, payment fetch, and checkout HMAC (`order_id\|payment_id`) |
+| `RAZORPAY_WEBHOOK_SECRET` | Dashboard webhook secret (`X-Razorpay-Signature` over the **raw** JSON body) |
+
+In the Razorpay dashboard, point the webhook at `POST /api/webhooks/razorpay` and enable `payment.captured` and `payment.failed`. This API verifies the signature against the unmodified request bytes (the webhook route is mounted before `express.json()`).
+
+A checkout starts only for a **PENDING** INR `Payment` owned by the authenticated user. After a verified capture, memberships move `PENDING → ACTIVE`, reserved tickets move `RESERVED → PAID`, merchandise orders move `PENDING → PAID`, and one `FinancialEntry` INCOME is inserted. Merchandise checkout reserves stock atomically when the order is created; a failed-payment webhook cancels the order and releases the reservation. A successful payment writes one `SALE` inventory movement per order item. Repeating the same capture is idempotent.
+
 ## Implemented endpoints
 
 | Method | Path | Auth | Notes |
@@ -83,6 +97,8 @@ Application users are **not** auto-created from a token. A valid token for an un
 | `GET` | `/api/events` | bearer | Catalogue with capacity remaining and `yourPrice` from current ACTIVE membership |
 | `GET` | `/api/events/:id` | bearer | Single event |
 | `POST` | `/api/events/:id/tickets` | bearer, linked user | Purchase; server computes member vs non-member price. Payment is **PENDING**; tickets are **RESERVED**. |
+| `GET` | `/api/merchandise/products` | bearer | Active product and variant catalogue with server prices and available stock |
+| `POST` | `/api/merchandise/orders` | bearer, linked user | Create an order from `{ "items": [{ "variantId": "...", "quantity": 1 }] }`; prices are read from the database and stock is reserved atomically. Positive totals create a **PENDING** INR merchandise payment; zero-total orders are immediately **PAID** without a payment record. |
 | `GET` | `/api/admin/members` | `ADMIN` or `TREASURER` | Directory with current membership |
 | `PATCH` | `/api/admin/members/:id` | `ADMIN` | `role` and/or `membershipStatus` |
 | `POST` | `/api/admin/events` | `ADMIN` | Create event (`createdById` from the verified user) |
@@ -94,6 +110,9 @@ Application users are **not** auto-created from a token. A valid token for an un
 | `GET` | `/api/admin/announcements` | `ADMIN` | All drafts, published, and archived |
 | `POST` | `/api/admin/announcements` | `ADMIN` | Create; `createdById` from the verified user. Default status `DRAFT`. |
 | `PATCH` | `/api/admin/announcements/:id` | `ADMIN` | `title`, `body`, and/or `status` |
+| `POST` | `/api/payments/:id/razorpay/order` | bearer, linked owner | Creates a Razorpay order for a **PENDING** INR payment owned by the caller and stores `order_…` on `Payment.externalRef` |
+| `POST` | `/api/payments/razorpay/verify` | bearer, linked owner | Verifies checkout HMAC, fetches the payment from Razorpay, then completes the Skyline payment |
+| `POST` | `/api/webhooks/razorpay` | Razorpay HMAC | Raw-body webhook. Handles `payment.captured` and `payment.failed`. Other events are acknowledged and ignored |
 
 ### Response shapes
 
@@ -192,7 +211,7 @@ Errors: `{ "error": "Unauthorized" | "Forbidden" | "Not Found" | "Bad Request" |
 npm test
 ```
 
-Uses Node's test runner. Member/auth tests use an in-memory Prisma stand-in and locally signed JWTs. They do not connect to Supabase or reset data.
+Uses Node's test runner. Auth, membership, event, announcement, merchandise, and payment tests use an in-memory Prisma stand-in and locally signed JWTs. Razorpay is mocked. They do not connect to Supabase or reset data.
 
 ## Folder layout
 

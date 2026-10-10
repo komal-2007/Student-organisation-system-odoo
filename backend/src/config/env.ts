@@ -39,7 +39,18 @@ export const env = {
   jwtAudience: optional("JWT_AUDIENCE") ?? "authenticated",
   membershipDuesAmount: optional("MEMBERSHIP_DUES_AMOUNT"),
   membershipPeriodDays: Number(optional("MEMBERSHIP_PERIOD_DAYS") ?? "365"),
+  razorpayKeyId: optional("RAZORPAY_KEY_ID"),
+  razorpayKeySecret: optional("RAZORPAY_KEY_SECRET"),
+  razorpayWebhookSecret: optional("RAZORPAY_WEBHOOK_SECRET"),
 };
+
+export function isRazorpayConfigured(): boolean {
+  return Boolean(env.razorpayKeyId && env.razorpayKeySecret);
+}
+
+export function isRazorpayWebhookConfigured(): boolean {
+  return Boolean(env.razorpayWebhookSecret);
+}
 
 export function isJwtVerificationConfigured(): boolean {
   return Boolean(env.supabaseJwtSecret || env.jwtJwksUrl);

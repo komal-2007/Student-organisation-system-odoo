@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "tsx --test src/health.test.ts src/jwt.test.ts src/api.members.test.ts src/api.events.test.ts src/api.announcements.test.ts",
+    "test": "tsx --test src/health.test.ts src/jwt.test.ts src/api.members.test.ts src/api.events.test.ts src/api.announcements.test.ts src/api.payments.test.ts src/api.merchandise.test.ts",
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate --config prisma7.config.ts",
     "prisma:migrate": "prisma migrate dev --config prisma7.config.ts",

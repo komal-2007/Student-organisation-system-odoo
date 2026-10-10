@@ -15,6 +15,34 @@ export type SkylineDb = {
   payment: {
     create: PrismaClient["payment"]["create"];
     findMany: PrismaClient["payment"]["findMany"];
+    findUnique: PrismaClient["payment"]["findUnique"];
+    findFirst: PrismaClient["payment"]["findFirst"];
+    update: PrismaClient["payment"]["update"];
+    updateMany: PrismaClient["payment"]["updateMany"];
+  };
+  financialEntry: {
+    create: PrismaClient["financialEntry"]["create"];
+    findFirst: PrismaClient["financialEntry"]["findFirst"];
+  };
+  merchandiseOrder: {
+    create: PrismaClient["merchandiseOrder"]["create"];
+    findFirst: PrismaClient["merchandiseOrder"]["findFirst"];
+    update: PrismaClient["merchandiseOrder"]["update"];
+    updateMany: PrismaClient["merchandiseOrder"]["updateMany"];
+  };
+  product: {
+    findMany: PrismaClient["product"]["findMany"];
+  };
+  productVariant: {
+    findMany: PrismaClient["productVariant"]["findMany"];
+    updateMany: PrismaClient["productVariant"]["updateMany"];
+  };
+  orderItem: {
+    create: PrismaClient["orderItem"]["create"];
+    findMany: PrismaClient["orderItem"]["findMany"];
+  };
+  inventoryMovement: {
+    create: PrismaClient["inventoryMovement"]["create"];
   };
   event: {
     findUnique: PrismaClient["event"]["findUnique"];
@@ -27,6 +55,7 @@ export type SkylineDb = {
     findMany: PrismaClient["ticket"]["findMany"];
     create: PrismaClient["ticket"]["create"];
     update: PrismaClient["ticket"]["update"];
+    updateMany: PrismaClient["ticket"]["updateMany"];
     count: PrismaClient["ticket"]["count"];
   };
   announcement: {
