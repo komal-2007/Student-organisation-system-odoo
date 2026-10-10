@@ -1,0 +1,243 @@
+/* ==========================================================================
+   Dashboard 3 — Registered Member Theme (Skyline Indigo/Cyan Theme)
+   ========================================================================== */
+.member-dashboard-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0f172a;
+}
+
+.member-header-banner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 50%, #0284c7 100%);
+  color: #ffffff;
+  padding: 24px 32px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.25);
+}
+
+.member-banner-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.member-banner-subtitle {
+  font-size: 14px;
+  color: #e0e7ff;
+  margin: 0;
+}
+
+.digital-pass-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.digital-pass-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.pass-brand {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #4f46e5;
+}
+
+.digital-pass-body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.pass-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #6366f1;
+}
+
+.pass-user-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: #0f172a;
+}
+
+.pass-user-email {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+
+.pass-meta-row {
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.digital-pass-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-renew-membership {
+  background: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.member-tabs-nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.member-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+}
+
+.member-tab-btn.active {
+  color: #0284c7;
+  border-bottom-color: #0284c7;
+}
+
+.tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.ticket-item-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.ticket-item-status {
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ticket-event-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+}
+
+.ticket-meta {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+
+.ticket-qr-placeholder {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  padding: 8px;
+  text-align: center;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #334155;
+}
+
+.btn-primary-small {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.merch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.merch-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+
+.merch-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.merch-details {
+  padding: 16px;
+}
+
+.merch-details h4 {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+}
+
+.merch-price {
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 12px;
+}
+
+.btn-order-merch {
+  width: 100%;
+  background: #0284c7;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
