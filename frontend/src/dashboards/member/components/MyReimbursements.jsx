@@ -1,27 +1,55 @@
 import React, { useState } from 'react';
 
+/* ── Outline SVG Icons ── */
+const IconReceipt = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+    <path d="M16 8h-8" />
+    <path d="M16 12h-8" />
+    <path d="M10 16h-2" />
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
 /**
  * MEMBER REIMBURSEMENTS VIEW
  * Strictly shows ONLY the logged-in member's submitted claims and status.
  * Contains ZERO club-wide financial ledgers or admin approval controls.
  */
-export function MyReimbursements({ initialClaims }) {
+export function MyReimbursements({ initialClaims = [] }) {
   const [claims, setClaims] = useState(initialClaims);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ title: '', amount: '', notes: '' });
+  const [formData, setFormData] = useState({ title: '', category: 'Supplies', amount: '', notes: '' });
+
+  const totalSubmitted = claims.reduce((acc, c) => acc + parseFloat(c.amount.replace('$', '') || 0), 0);
+  const approvedTotal = claims
+    .filter((c) => c.status === 'approved')
+    .reduce((acc, c) => acc + parseFloat(c.amount.replace('$', '') || 0), 0);
+  const pendingTotal = claims
+    .filter((c) => c.status === 'pending')
+    .reduce((acc, c) => acc + parseFloat(c.amount.replace('$', '') || 0), 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const newClaim = {
       id: `my-rmb-${Date.now()}`,
       title: formData.title,
+      category: formData.category,
       amount: `$${Number(formData.amount).toFixed(2)}`,
-      submittedDate: new Date().toISOString().split('T')[0],
+      submittedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
       status: 'pending',
-      notes: formData.notes || 'Submitted for review',
+      notes: formData.notes || 'Submitted for treasurer review',
     };
     setClaims((prev) => [newClaim, ...prev]);
-    setFormData({ title: '', amount: '', notes: '' });
+    setFormData({ title: '', category: 'Supplies', amount: '', notes: '' });
     setIsSubmitModalOpen(false);
   };
 
@@ -30,45 +58,83 @@ export function MyReimbursements({ initialClaims }) {
       <div className="skyline-card">
         <div className="skyline-card-header">
           <div>
-            <h3 className="skyline-card-title">My Reimbursement Claims</h3>
-            <p className="skyline-card-subtitle">Track the status of your submitted expense reimbursements</p>
+            <h3 className="skyline-card-title">
+              <IconReceipt />
+              <span>My Expense Reimbursement Claims</span>
+            </h3>
+            <p className="skyline-card-subtitle">
+              Submit and track your personal out-of-pocket expenses for authorized club activities
+            </p>
           </div>
-          <button className="btn-primary-small" onClick={() => setIsSubmitModalOpen(true)}>
-            + Submit New Expense Claim
+          <button
+            type="button"
+            className="btn-create-event"
+            onClick={() => setIsSubmitModalOpen(true)}
+          >
+            <IconPlus />
+            <span>Submit New Claim</span>
           </button>
         </div>
-        <div className="skyline-card-body">
+
+        {/* ── Personal Claim Summary Pills ── */}
+        <div className="finance-summary-pills">
+          <div className="pill-stat balance">
+            Total Claimed: ${totalSubmitted.toFixed(2)}
+          </div>
+          <div className="pill-stat income">
+            Approved: ${approvedTotal.toFixed(2)}
+          </div>
+          <div className="pill-stat expense">
+            Pending Review: ${pendingTotal.toFixed(2)}
+          </div>
+        </div>
+
+        {/* ── Personal Claims Table ── */}
+        <div className="skyline-table-wrapper">
           <table className="skyline-table">
             <thead>
               <tr>
                 <th>Expense Item</th>
+                <th>Category</th>
                 <th>Submitted Date</th>
                 <th>Amount</th>
-                <th>Status</th>
-                <th>Notes</th>
+                <th>Claim Status</th>
+                <th>Reviewer Notes</th>
               </tr>
             </thead>
             <tbody>
               {claims.map((claim) => (
                 <tr key={claim.id}>
                   <td><strong>{claim.title}</strong></td>
-                  <td>{claim.submittedDate}</td>
-                  <td>{claim.amount}</td>
-                  <td><span className={`skyline-badge badge-${claim.status}`}>{claim.status}</span></td>
-                  <td className="text-secondary">{claim.notes}</td>
+                  <td><span className="skyline-badge badge-low">{claim.category || 'General'}</span></td>
+                  <td style={{ color: '#667085' }}>{claim.submittedDate}</td>
+                  <td style={{ fontWeight: 700, color: '#101426' }}>{claim.amount}</td>
+                  <td>
+                    <span className={`skyline-badge badge-${claim.status}`}>
+                      {claim.status}
+                    </span>
+                  </td>
+                  <td style={{ color: '#667085', fontSize: '13px' }}>{claim.notes}</td>
                 </tr>
               ))}
+              {claims.length === 0 && (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '24px', color: '#667085' }}>
+                    You have not submitted any reimbursement claims yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modal for Member Claim Submission */}
+      {/* ── Modal for Member Claim Submission ── */}
       {isSubmitModalOpen && (
         <div className="skyline-modal-overlay" onClick={() => setIsSubmitModalOpen(false)}>
           <div className="skyline-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="skyline-modal-header">
-              <h3>Submit Expense Reimbursement Claim</h3>
+              <h3>Submit Expense Reimbursement</h3>
               <button onClick={() => setIsSubmitModalOpen(false)}>&times;</button>
             </div>
             <form onSubmit={handleSubmit} className="skyline-modal-body">
@@ -77,11 +143,27 @@ export function MyReimbursements({ initialClaims }) {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Refreshments for Workshop"
+                  placeholder="e.g., Pizza for AI Workshop Mentors"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
+
+              <div className="form-group">
+                <label>Expense Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E6F0' }}
+                >
+                  <option value="Supplies">Event Supplies & Materials</option>
+                  <option value="Food & Beverage">Food & Refreshments</option>
+                  <option value="Marketing">Printing & Marketing</option>
+                  <option value="Tech">Hardware / Cloud Hosting</option>
+                  <option value="Travel">Campus Travel / Transport</option>
+                </select>
+              </div>
+
               <div className="form-group">
                 <label>Amount ($)</label>
                 <input
@@ -93,17 +175,28 @@ export function MyReimbursements({ initialClaims }) {
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 />
               </div>
+
               <div className="form-group">
-                <label>Notes & Receipt Link</label>
+                <label>Receipt Link or Vendor Detail</label>
                 <textarea
-                  placeholder="Receipt URL or additional context..."
+                  placeholder="Paste URL to receipt PDF/image or specify vendor name..."
+                  rows="3"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               </div>
+
               <div className="skyline-modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setIsSubmitModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn-submit">Submit Claim</button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setIsSubmitModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-submit">
+                  Submit Claim
+                </button>
               </div>
             </form>
           </div>
