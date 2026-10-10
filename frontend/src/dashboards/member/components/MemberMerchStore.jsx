@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { skylineApi } from '../../../services/api/skylineApi';
 
 /* ── Outline SVG Icons ── */
 const IconShoppingBag = () => (
@@ -17,30 +18,17 @@ const IconCheck = () => (
   </svg>
 );
 
+import { PaymentCheckoutModal } from '../../../components/PaymentCheckoutModal';
+import { useAuth } from '../../../services/auth/AuthContext';
+
 export function MemberMerchStore({ catalog = [], myOrders = [] }) {
+  const { user } = useAuth();
   const [orders, setOrders] = useState(myOrders);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [pickupLocation, setPickupLocation] = useState('Club Room 204 (Wed 4:00 PM – 6:00 PM)');
-  const [orderComplete, setOrderComplete] = useState(false);
 
-  const handlePlaceOrder = (e) => {
-    e.preventDefault();
-    if (!selectedItem) return;
-    const newOrder = {
-      id: `ord-${Date.now()}`,
-      item: selectedItem.name,
-      price: selectedItem.price,
-      orderDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-      status: 'Processing',
-      pickupLocation: pickupLocation || 'Club Room 204 (Wed 4-6 PM)',
-    };
-    setOrders((prev) => [newOrder, ...prev]);
-    setOrderComplete(true);
-    setTimeout(() => {
-      setSelectedItem(null);
-      setOrderComplete(false);
-    }, 1800);
-  };
+  React.useEffect(() => {
+    setOrders(myOrders || []);
+  }, [myOrders]);
 
   return (
     <div className="member-merch-section">
@@ -139,77 +127,19 @@ export function MemberMerchStore({ catalog = [], myOrders = [] }) {
       </div>
 
       {/* ── Order Modal ── */}
-      {selectedItem && (
-        <div className="skyline-modal-overlay" onClick={() => setSelectedItem(null)}>
-          <div className="skyline-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="skyline-modal-header">
-              <h3>Confirm Member Order</h3>
-              <button onClick={() => setSelectedItem(null)}>&times;</button>
-            </div>
-            {orderComplete ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#059669' }}>
-                <IconCheck />
-                <p style={{ fontWeight: 700, fontSize: '15px', marginTop: '8px' }}>
-                  Order Placed Successfully!
-                </p>
-                <p style={{ fontSize: '13px', color: '#667085' }}>
-                  Pick up your {selectedItem.name} at Club Room 204 during executive office hours.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handlePlaceOrder} className="skyline-modal-body">
-                <div style={{
-                  padding: '16px',
-                  backgroundColor: '#F4F5FB',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E6F0',
-                  marginBottom: '16px'
-                }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 4px' }}>
-                    {selectedItem.name}
-                  </h4>
-                  <p style={{ fontSize: '13px', color: '#667085', margin: '0 0 8px' }}>
-                    {selectedItem.description}
-                  </p>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#7257E8' }}>
-                    {selectedItem.price}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Size / Variant (if applicable)</label>
-                  <select style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E6F0' }}>
-                    <option value="M">Medium (Standard)</option>
-                    <option value="S">Small</option>
-                    <option value="L">Large</option>
-                    <option value="XL">Extra Large</option>
-                    <option value="NA">One Size / Not Applicable</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Pickup Location</label>
-                  <input
-                    type="text"
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #E2E6F0' }}
-                  />
-                </div>
-
-                <div className="skyline-modal-footer">
-                  <button type="button" className="btn-secondary" onClick={() => setSelectedItem(null)}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn-submit">
-                    Confirm & Place Order
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      {/* ── Order Checkout Modal via Payment Gateway ── */}
+      <PaymentCheckoutModal
+        isOpen={Boolean(selectedItem)}
+        onClose={() => setSelectedItem(null)}
+        type="merchandise"
+        item={selectedItem}
+        user={user}
+        onSuccess={(result) => {
+          if (result?.order) {
+            setOrders((prev) => [result.order, ...prev]);
+          }
+        }}
+      />
     </div>
   );
 }

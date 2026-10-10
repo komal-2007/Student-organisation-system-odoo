@@ -35,32 +35,24 @@ const IconCompass = () => (
   </svg>
 );
 
+import { PaymentCheckoutModal } from '../../../components/PaymentCheckoutModal';
+import { useAuth } from '../../../services/auth/AuthContext';
+
 export function MemberEvents({ events = [] }) {
+  const { user } = useAuth();
   const [eventList, setEventList] = useState(events);
   const [activeCategory, setActiveCategory] = useState('All');
   const [rsvpEvent, setRsvpEvent] = useState(null);
-  const [confirmedMessage, setConfirmedMessage] = useState(null);
+
+  React.useEffect(() => {
+    setEventList(events || []);
+  }, [events]);
 
   const categories = ['All', 'Hackathon', 'Workshop', 'Social', 'Tech', 'Leadership'];
 
   const filteredEvents = activeCategory === 'All'
     ? eventList
     : eventList.filter((e) => e.category === activeCategory);
-
-  const handleRegister = (eventId) => {
-    setEventList((prev) =>
-      prev.map((e) =>
-        e.id === eventId
-          ? { ...e, isRegistered: true, registered: e.registered + 1 }
-          : e
-      )
-    );
-    setConfirmedMessage('Your RSVP has been confirmed! A digital admission pass has been added to My Passes.');
-    setTimeout(() => {
-      setRsvpEvent(null);
-      setConfirmedMessage(null);
-    }, 2000);
-  };
 
   return (
     <div className="member-events-section">
@@ -156,61 +148,25 @@ export function MemberEvents({ events = [] }) {
         </div>
       </div>
 
-      {/* ── RSVP Confirmation Modal ── */}
-      {rsvpEvent && (
-        <div className="skyline-modal-overlay" onClick={() => setRsvpEvent(null)}>
-          <div className="skyline-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="skyline-modal-header">
-              <h3>Confirm Event Registration</h3>
-              <button onClick={() => setRsvpEvent(null)}>&times;</button>
-            </div>
-            {confirmedMessage ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#059669' }}>
-                <p style={{ fontWeight: 700, fontSize: '15px' }}>{confirmedMessage}</p>
-              </div>
-            ) : (
-              <div className="skyline-modal-body">
-                <p style={{ fontSize: '14px', color: '#101426', marginBottom: '16px' }}>
-                  Reserve your admission pass for:
-                </p>
-                <div style={{
-                  padding: '16px',
-                  backgroundColor: '#F4F5FB',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E6F0',
-                  marginBottom: '16px'
-                }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 6px' }}>
-                    {rsvpEvent.title}
-                  </h4>
-                  <div style={{ fontSize: '13px', color: '#667085' }}>
-                    {rsvpEvent.date} • {rsvpEvent.time}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#667085' }}>
-                    {rsvpEvent.venue}
-                  </div>
-                </div>
-                <div className="skyline-modal-footer">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => setRsvpEvent(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-submit"
-                    onClick={() => handleRegister(rsvpEvent.id)}
-                  >
-                    Confirm RSVP
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* ── Ticket Reservation Modal via Payment Gateway ── */}
+      <PaymentCheckoutModal
+        isOpen={Boolean(rsvpEvent)}
+        onClose={() => setRsvpEvent(null)}
+        type="ticket"
+        item={rsvpEvent}
+        user={user}
+        onSuccess={(result) => {
+          if (result?.ticket) {
+            setEventList((prev) =>
+              prev.map((e) =>
+                e.id === rsvpEvent.id
+                  ? { ...e, isRegistered: true, registered: (e.registered || 0) + 1 }
+                  : e
+              )
+            );
+          }
+        }}
+      />
     </div>
   );
 }

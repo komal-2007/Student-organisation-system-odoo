@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { skylineApi } from '../../../services/api/skylineApi';
+import { RealQRCode } from '../../../components/RealQRCode';
 
 /* ── Outline SVG Icons ── */
 const IconCalendar = () => (
@@ -47,6 +49,24 @@ const IconDownload = () => (
 
 export function MyTickets({ tickets }) {
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [qrVerifyStatus, setQrVerifyStatus] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleVerifyQr = async (ticket) => {
+    setIsVerifying(true);
+    setQrVerifyStatus(null);
+    try {
+      const res = await skylineApi.verifyTicketQr(ticket.qrToken || `QR-TOKEN-${ticket.ticketNumber || ticket.ticketCode}`);
+      setQrVerifyStatus({ success: true, message: res.message });
+      if (res.ticket) {
+        ticket.status = res.ticket.status;
+      }
+    } catch (err) {
+      setQrVerifyStatus({ success: false, message: err.message || 'QR Verification failed.' });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   return (
     <div className="my-tickets-section">
@@ -95,22 +115,14 @@ export function MyTickets({ tickets }) {
 
               {/* Ticket QR Strip */}
               <div className="ticket-qr-strip">
-                <div className="qr-box-small">
-                  <div className="qr-mock-matrix">
-                    <div className="qr-cell" />
-                    <div className="qr-cell fill" />
-                    <div className="qr-cell fill" />
-                    <div className="qr-cell" />
-                    <div className="qr-cell fill" />
-                    <div className="qr-cell fill" />
-                    <div className="qr-cell fill" />
-                    <div className="qr-cell" />
-                    <div className="qr-cell fill" />
-                  </div>
-                </div>
+                <RealQRCode
+                  token={tkt.status !== 'CANCELLED' ? (tkt.qrToken || `QR-TOKEN-${tkt.ticketNumber || tkt.ticketCode || tkt.id}`) : ''}
+                  size={52}
+                  status={tkt.status}
+                />
                 <div className="qr-info-wrap">
                   <span className="qr-code-label">TICKET ID</span>
-                  <code className="qr-code-id">{tkt.ticketCode}</code>
+                  <code className="qr-code-id">{tkt.ticketNumber || tkt.ticketCode}</code>
                 </div>
               </div>
 
@@ -156,39 +168,32 @@ export function MyTickets({ tickets }) {
               </p>
 
               <div style={{
-                padding: '24px',
+                padding: '20px',
                 backgroundColor: '#F4F5FB',
                 borderRadius: '12px',
                 border: '1px solid #E2E6F0',
                 display: 'inline-block',
-                margin: '0 auto 20px'
+                margin: '0 auto 20px',
+                textAlign: 'center'
               }}>
-                <div style={{
-                  width: '120px',
-                  height: '120px',
-                  backgroundColor: '#ffffff',
-                  border: '2px solid #101426',
-                  borderRadius: '8px',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(5, 1fr)',
-                  gap: '4px',
-                  padding: '8px',
-                  margin: '0 auto 12px'
-                }}>
-                  {[...Array(25)].map((_, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        backgroundColor: (i % 2 === 0 || i % 5 === 0) ? '#101426' : 'transparent',
-                        borderRadius: '1px'
-                      }}
-                    />
-                  ))}
+                <RealQRCode
+                  token={selectedTicket.status !== 'CANCELLED' ? (selectedTicket.qrToken || `QR-TOKEN-${selectedTicket.ticketNumber || selectedTicket.ticketCode || selectedTicket.id}`) : ''}
+                  size={140}
+                  label={selectedTicket.status === 'USED' ? 'ALREADY CHECKED IN' : selectedTicket.status === 'VALID' ? 'SCAN AT ENTRANCE' : 'UNAVAILABLE'}
+                  status={selectedTicket.status}
+                />
+                <div style={{ marginTop: '10px' }}>
+                  <code style={{ fontSize: '13px', fontWeight: 700, color: '#101426' }}>
+                    {selectedTicket.ticketNumber || selectedTicket.ticketCode}
+                  </code>
                 </div>
-                <code style={{ fontSize: '13px', fontWeight: 700, color: '#101426' }}>
-                  {selectedTicket.ticketCode}
-                </code>
               </div>
+
+              {qrVerifyStatus && (
+                <div style={{ padding: '10px 14px', marginBottom: '14px', borderRadius: '6px', background: qrVerifyStatus.success ? '#ECFDF3' : '#FEF3F2', color: qrVerifyStatus.success ? '#027A48' : '#B42318', fontSize: '13px' }}>
+                  {qrVerifyStatus.message}
+                </div>
+              )}
 
               <div style={{
                 display: 'grid',
@@ -213,12 +218,10 @@ export function MyTickets({ tickets }) {
               <button
                 type="button"
                 className="btn-submit"
-                onClick={() => {
-                  alert('Pass downloaded!');
-                  setSelectedTicket(null);
-                }}
+                disabled={isVerifying || selectedTicket.status === 'USED'}
+                onClick={() => handleVerifyQr(selectedTicket)}
               >
-                Download PDF Pass
+                {isVerifying ? 'Verifying...' : selectedTicket.status === 'USED' ? 'Ticket Already Checked In' : 'Validate Server QR Check-in'}
               </button>
             </div>
           </div>

@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../services/auth/AuthContext';
+import { skylineApi, subscribeToDataRefresh, notifyDataRefresh } from '../../../services/api/skylineApi';
 
 /* ── Outline SVG Icons ── */
 const IconReceipt = () => (
@@ -24,33 +26,70 @@ const IconPlus = () => (
  * Strictly shows ONLY the logged-in member's submitted claims and status.
  * Contains ZERO club-wide financial ledgers or admin approval controls.
  */
+const normalizeClaimStatus = (status) => {
+  const value = String(status || '').trim();
+  if (['pending', 'Pending', 'Pending Approval'].includes(value)) return 'pending';
+  if (['approved', 'Approved'].includes(value)) return 'approved';
+  if (['rejected', 'Rejected'].includes(value)) return 'rejected';
+  return 'pending';
+};
+
 export function MyReimbursements({ initialClaims = [] }) {
+  const { user } = useAuth();
   const [claims, setClaims] = useState(initialClaims);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: '', category: 'Supplies', amount: '', notes: '' });
 
-  const totalSubmitted = claims.reduce((acc, c) => acc + parseFloat(c.amount.replace('$', '') || 0), 0);
-  const approvedTotal = claims
-    .filter((c) => c.status === 'approved')
-    .reduce((acc, c) => acc + parseFloat(c.amount.replace('$', '') || 0), 0);
-  const pendingTotal = claims
-    .filter((c) => c.status === 'pending')
-    .reduce((acc, c) => acc + parseFloat(c.amount.replace('$', '') || 0), 0);
+  useEffect(() => {
+    let active = true;
+    async function loadClaims() {
+      try {
+        const res = await skylineApi.getReimbursements();
+        if (!active) return;
+        const currentUserId = user?.id || user?.username;
+        const filtered = (res?.reimbursements || []).filter((claim) => {
+          const matchesUser = !currentUserId || claim.userId === currentUserId || claim.userName === user?.name;
+          return matchesUser;
+        });
+        setClaims(filtered);
+      } catch (err) {
+        if (active) setClaims(initialClaims || []);
+      }
+    }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newClaim = {
-      id: `my-rmb-${Date.now()}`,
-      title: formData.title,
-      category: formData.category,
-      amount: `$${Number(formData.amount).toFixed(2)}`,
-      submittedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-      status: 'pending',
-      notes: formData.notes || 'Submitted for treasurer review',
+    loadClaims();
+    const unsubscribe = subscribeToDataRefresh(() => loadClaims());
+    return () => {
+      active = false;
+      unsubscribe();
     };
-    setClaims((prev) => [newClaim, ...prev]);
-    setFormData({ title: '', category: 'Supplies', amount: '', notes: '' });
-    setIsSubmitModalOpen(false);
+  }, [user?.id, user?.username, user?.name, initialClaims]);
+
+  const totalSubmitted = claims.reduce((acc, c) => acc + parseFloat(String(c.amount || '').replace(/[^0-9.]/g, '') || 0), 0);
+  const approvedTotal = claims
+    .filter((c) => normalizeClaimStatus(c.status) === 'approved')
+    .reduce((acc, c) => acc + parseFloat(String(c.amount || '').replace(/[^0-9.]/g, '') || 0), 0);
+  const pendingTotal = claims
+    .filter((c) => normalizeClaimStatus(c.status) === 'pending')
+    .reduce((acc, c) => acc + parseFloat(String(c.amount || '').replace(/[^0-9.]/g, '') || 0), 0);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        title: formData.title,
+        category: formData.category,
+        amount: Number(formData.amount),
+        notes: formData.notes || 'Submitted for treasurer review',
+        userId: user?.id || user?.username,
+      };
+      await skylineApi.submitReimbursement(payload);
+      notifyDataRefresh('reimbursements');
+      setFormData({ title: '', category: 'Supplies', amount: '', notes: '' });
+      setIsSubmitModalOpen(false);
+    } catch (err) {
+      console.error('Failed to submit reimbursement claim:', err);
+    }
   };
 
   return (

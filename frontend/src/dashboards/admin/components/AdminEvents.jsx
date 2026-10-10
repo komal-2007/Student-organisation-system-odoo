@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { skylineApi, notifyDataRefresh } from '../../../services/api/skylineApi';
 
 /* ==========================================================================
    ADMIN EVENTS & TICKETS — Full Management Screen (MOCK)
@@ -69,7 +70,7 @@ const CATEGORY_OPTIONS = ['Hackathon', 'Workshop', 'Social', 'Ceremony', 'Compet
 
 const INITIAL_FORM = {
   title: '', date: '', time: '', venue: '', category: 'Workshop',
-  capacity: '', ticketPrice: 'Free', description: '', status: 'draft',
+  capacity: '', ticketPrice: 'Free', description: '', status: 'upcoming',
 };
 
 /* ── Helpers ── */
@@ -90,9 +91,14 @@ const capacityColor = (pct) => {
   return '#45D6C5';
 };
 
-export function AdminEvents({ events: initialEvents, eventAttendees }) {
+export function AdminEvents({ events: initialEvents, eventAttendees, onEventMutated }) {
   /* ── State ── */
   const [events, setEvents] = useState(initialEvents || []);
+
+  React.useEffect(() => {
+    setEvents(initialEvents || []);
+  }, [initialEvents]);
+
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -177,38 +183,56 @@ export function AdminEvents({ events: initialEvents, eventAttendees }) {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     if (editingEvent) {
-      /* ── MOCK UPDATE ── */
-      setEvents(prev => prev.map(ev =>
-        ev.id === editingEvent.id
-          ? { ...ev, ...form, capacity: Number(form.capacity) }
-          : ev
-      ));
-      flash(`"${form.title}" updated successfully (mock)`);
-    } else {
-      /* ── MOCK CREATE ── */
-      const newEvt = {
+      try {
+        const res = await skylineApi.updateEvent(editingEvent.id, { ...form, capacity: Number(form.capacity) });
+        const updated = res?.event || { ...editingEvent, ...form, capacity: Number(form.capacity) };
+        setEvents(prev => prev.map(ev => ev.id === editingEvent.id ? updated : ev));
+        notifyDataRefresh('events');
+        onEventMutated?.();
+        flash(`"${form.title}" updated successfully`);
+        closeModal();
+      } catch (err) {
+        flash(err.message || 'Failed to update event on server');
+      }
+      return;
+    }
+
+    try {
+      const res = await skylineApi.createEvent(form);
+      const created = res.event || {
         ...form,
         id: `evt-${Date.now()}`,
         capacity: Number(form.capacity),
         registered: 0,
         organizer: 'Komal Bhatia',
       };
-      setEvents(prev => [newEvt, ...prev]);
-      flash(`"${form.title}" created successfully (mock)`);
+      setEvents(prev => [created, ...prev]);
+      notifyDataRefresh('events');
+      onEventMutated?.();
+      flash(`"${form.title}" created & persisted to backend successfully!`);
+      closeModal();
+    } catch (err) {
+      flash(err.message || 'Failed to create event on server');
     }
-    closeModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const evt = events.find(e => e.id === id);
-    setEvents(prev => prev.filter(e => e.id !== id));
-    setDeleteConfirm(null);
-    flash(`"${evt?.title}" deleted (mock)`);
+    try {
+      await skylineApi.deleteEvent(id);
+      setEvents(prev => prev.filter(e => e.id !== id));
+      notifyDataRefresh('events');
+      onEventMutated?.();
+      setDeleteConfirm(null);
+      flash(`"${evt?.title}" deleted successfully`);
+    } catch (err) {
+      flash(err.message || 'Failed to delete event from server');
+    }
   };
 
   const flash = (msg) => {

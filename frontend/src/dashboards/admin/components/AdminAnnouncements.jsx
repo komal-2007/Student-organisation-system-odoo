@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 
 /* ==========================================================================
    ADMIN ANNOUNCEMENTS BROADCAST PUBLISHER (MOCK)
-   Person 2: Replace local state mutations with API calls:
+   have to Replace local state mutations with API calls:
    - GET  /api/admin/announcements
    - POST /api/admin/announcements
    - PUT  /api/admin/announcements/:id

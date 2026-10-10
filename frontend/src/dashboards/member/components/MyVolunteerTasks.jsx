@@ -23,6 +23,10 @@ export function MyVolunteerTasks({ initialTasks = [] }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [filter, setFilter] = useState('all');
 
+  React.useEffect(() => {
+    setTasks(initialTasks || []);
+  }, [initialTasks]);
+
   const toggleTask = (id) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t))

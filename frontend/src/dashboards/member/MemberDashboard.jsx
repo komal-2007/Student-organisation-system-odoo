@@ -111,17 +111,73 @@ import { SharedSettings } from '../../features/account/SharedSettings';
  * Personalized portal for authenticated student members.
  * Strictly isolates personal data; contains NO admin ledgers or approvals.
  */
+import { skylineApi, subscribeToDataRefresh } from '../../services/api/skylineApi';
+
 export function MemberDashboard() {
   const { logout, user } = useAuth();
   const displayName = user?.name || user?.username || 'Member';
   const displayRole = user?.membershipTier ? `${user.membershipTier} Member` : 'Registered Member';
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [activeSection, setActiveSection] = useState('overview');
-  const [memberData] = useState(MEMBER_MOCK_DATA);
+  const [memberData, setMemberData] = useState(MEMBER_MOCK_DATA);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+
+  // Fetch live backend data from REST API
+  useEffect(() => {
+    let active = true;
+    async function loadMemberLiveData() {
+      try {
+        const [ticketsRes, ordersRes, eventsRes, merchRes, annRes, taskRes] = await Promise.allSettled([
+          skylineApi.getMyTickets(user?.id || user?.username),
+          skylineApi.getMyOrders(user?.id || user?.username),
+          skylineApi.getEvents(),
+          skylineApi.getMerchandise(),
+          skylineApi.getAnnouncements(),
+          skylineApi.getVolunteerTasks(),
+        ]);
+
+        if (!active) return;
+
+        setMemberData((prev) => {
+          const myTickets = ticketsRes.status === 'fulfilled' ? ticketsRes.value.tickets : prev.myTickets;
+          const myMerchOrders = ordersRes.status === 'fulfilled' ? ordersRes.value.orders : prev.myMerchOrders;
+          const discoverEvents = eventsRes.status === 'fulfilled' ? eventsRes.value.events : prev.discoverEvents;
+          const merchandiseCatalog = merchRes.status === 'fulfilled' ? merchRes.value.merchandise : prev.merchandiseCatalog;
+          const announcements = annRes.status === 'fulfilled' ? annRes.value.announcements : prev.announcements;
+          const myVolunteerTasks = taskRes.status === 'fulfilled' ? taskRes.value.tasks : prev.myVolunteerTasks;
+
+          return {
+            ...prev,
+            profile: {
+              ...prev.profile,
+              name: user?.name || prev.profile.name,
+              email: user?.email || prev.profile.email,
+              membershipTier: user?.membershipTier || prev.profile.membershipTier,
+              studentId: user?.studentId || prev.profile.studentId,
+            },
+            myTickets,
+            myMerchOrders,
+            discoverEvents,
+            merchandiseCatalog,
+            announcements,
+            myVolunteerTasks,
+          };
+        });
+      } catch (err) {
+        console.warn('Member API sync warning:', err);
+      }
+    }
+
+    loadMemberLiveData();
+    const unsubscribe = subscribeToDataRefresh(() => loadMemberLiveData());
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [user?.id, user?.username]);
 
   /* Close dropdowns on outside click */
   useEffect(() => {

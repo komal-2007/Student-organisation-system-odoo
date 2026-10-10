@@ -113,6 +113,7 @@ const NAV_ITEMS = [
   { id: 'volunteers', label: 'Volunteers', icon: IconVolunteers },
 ];
 
+import { skylineApi } from '../../services/api/skylineApi';
 import { useAuth } from '../../services/auth/AuthContext';
 
 /**
@@ -125,11 +126,120 @@ export function AdminDashboard() {
   const displayTitle = user?.title || 'Club President';
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [activeSection, setActiveSection] = useState('overview');
-  const [adminData] = useState(ADMIN_MOCK_DATA);
+  const [adminData, setAdminData] = useState(ADMIN_MOCK_DATA);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+
+  const normalizeStatus = (value) => {
+    const status = String(value || '').trim();
+    if (['pending', 'Pending', 'Pending Approval'].includes(status)) return 'Pending Approval';
+    if (['approved', 'Approved'].includes(status)) return 'Approved';
+    if (['rejected', 'Rejected'].includes(status)) return 'Rejected';
+    return status;
+  };
+
+  const buildOverviewData = (events, members, reimbursements) => {
+    const parseMoney = (value) => Number(String(value || '').replace(/[^0-9.]/g, '')) || 0;
+    const pendingMembers = (members || []).filter((member) => member.status === 'Pending Approval');
+    const pendingReimbursements = (reimbursements || []).filter((claim) => normalizeStatus(claim.status) === 'Pending Approval');
+    const pendingActions = [
+      ...pendingReimbursements.map((claim) => ({
+        id: `reimb-${claim.id}`,
+        type: 'reimbursement',
+        title: `${claim.userName || claim.memberName || 'Member'} — ${claim.title} ($${parseMoney(claim.rawAmount ?? claim.amount).toFixed(2)})`,
+        urgency: 'high',
+        date: claim.date || 'Pending review',
+      })),
+      ...pendingMembers.map((member) => ({
+        id: `member-${member.id}`,
+        type: 'membership',
+        title: `${member.name} — Requested to join ${member.department || 'General'} Department`,
+        urgency: 'medium',
+        date: member.joinedDate || 'Pending review',
+      })),
+    ];
+
+    const overviewEvents = (events || [])
+      .filter((event) => event.status === 'upcoming')
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 3)
+      .map((event) => ({
+        ...event,
+        registered: Number(event.registered || 0),
+      }));
+
+    return { pendingActions, overviewEvents };
+  };
+
+  const loadLiveData = async () => {
+    try {
+      const [eventsRes, membersRes, finRes, rmbRes, annRes, taskRes, fndRes] = await Promise.allSettled([
+        skylineApi.getEvents(),
+        skylineApi.getMembers(),
+        skylineApi.getFinanceSummary(),
+        skylineApi.getReimbursements(),
+        skylineApi.getAnnouncements(),
+        skylineApi.getVolunteerTasks(),
+        skylineApi.getFundraisingCampaigns(),
+      ]);
+
+      setAdminData((prev) => {
+        const events = eventsRes.status === 'fulfilled' ? eventsRes.value.events : prev.events;
+        const members = membersRes.status === 'fulfilled' ? membersRes.value.members : prev.members;
+        const finSummary = finRes.status === 'fulfilled' ? finRes.value : prev.financeSummary;
+        const reimbursements = rmbRes.status === 'fulfilled' ? rmbRes.value.reimbursements : prev.reimbursementQueue;
+        const announcements = annRes.status === 'fulfilled' ? annRes.value.announcements : prev.announcements;
+        const volunteerTasks = taskRes.status === 'fulfilled' ? taskRes.value.tasks : prev.volunteerTasks;
+        const fundraisingCampaigns = fndRes.status === 'fulfilled' ? fndRes.value.campaigns : prev.fundraisingCampaigns;
+        const { pendingActions, overviewEvents } = buildOverviewData(events, members, reimbursements);
+
+        return {
+          ...prev,
+          stats: {
+            ...prev.stats,
+            totalMembers: members.length,
+            activeEvents: events.filter((e) => e.status === 'upcoming').length,
+            treasuryBalance: finSummary.netBalance || prev.stats.treasuryBalance,
+            pendingApprovals: reimbursements.filter((r) => normalizeStatus(r.status) === 'Pending Approval').length + members.filter((m) => m.status === 'Pending Approval').length,
+          },
+          events,
+          members,
+          financeSummary: finSummary,
+          reimbursementQueue: reimbursements,
+          announcements,
+          volunteerTasks,
+          fundraisingCampaigns,
+          pendingActions,
+          overviewEvents,
+        };
+      });
+    } catch (err) {
+      console.warn('API sync warning:', err);
+    }
+  };
+
+  // Fetch live backend data from REST API and refresh when dashboards change
+  useEffect(() => {
+    let active = true;
+    const handleDataSync = () => {
+      if (!active) return;
+      loadLiveData();
+    };
+
+    loadLiveData();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('skyline:data-sync', handleDataSync);
+    }
+
+    return () => {
+      active = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('skyline:data-sync', handleDataSync);
+      }
+    };
+  }, [user?.id, activeSection]);
 
   /* Close dropdowns on outside click */
   useEffect(() => {
@@ -285,7 +395,7 @@ export function AdminDashboard() {
           {activeSection === 'overview' && <AdminOverview data={adminData} />}
           {activeSection === 'finance' && <AdminFinance financeData={adminData.financeSummary} />}
           {activeSection === 'reimbursements' && <AdminReimbursements initialQueue={adminData.reimbursementQueue} />}
-          {activeSection === 'events' && <AdminEvents events={adminData.events} eventAttendees={adminData.eventAttendees} />}
+          {activeSection === 'events' && <AdminEvents events={adminData.events} eventAttendees={adminData.eventAttendees} onEventMutated={loadLiveData} />}
           {activeSection === 'members' && <AdminMembers members={adminData.members} />}
           {activeSection === 'volunteers' && <AdminVolunteers tasks={adminData.volunteerTasks} />}
           {activeSection === 'fundraising' && <AdminFundraising campaigns={adminData.fundraisingCampaigns} />}

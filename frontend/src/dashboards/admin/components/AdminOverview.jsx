@@ -31,6 +31,14 @@ export function AdminOverview({ data }) {
   const [items, setItems] = useState(data.pendingActions || []);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  React.useEffect(() => {
+    setItems(data.pendingActions || []);
+    setSelectedItem((current) => {
+      if (!current) return null;
+      return (data.pendingActions || []).find((item) => item.id === current.id) || null;
+    });
+  }, [data.pendingActions]);
+
   const handleReview = (item) => {
     setSelectedItem(item);
   };

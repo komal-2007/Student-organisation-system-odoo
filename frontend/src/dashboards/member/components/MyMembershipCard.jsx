@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RealQRCode } from '../../../components/RealQRCode';
 
 /* ── SVG Icons ── */
 const IconShield = () => (
@@ -88,20 +89,13 @@ export function MyMembershipCard({ profile }) {
                 </div>
               </div>
 
-              {/* QR Verification Visual */}
-              <div className="id-qr-box">
-                <div className="id-qr-graphic">
-                  <div className="qr-cell fill" />
-                  <div className="qr-cell fill" />
-                  <div className="qr-cell" />
-                  <div className="qr-cell fill" />
-                  <div className="qr-cell fill" />
-                  <div className="qr-cell" />
-                  <div className="qr-cell fill" />
-                  <div className="qr-cell fill" />
-                  <div className="qr-cell" />
-                </div>
-                <span className="id-qr-label">SCAN TO VERIFY</span>
+              {/* Verified Digital Credential QR */}
+              <div className="id-qr-box" style={{ padding: '4px' }}>
+                <RealQRCode
+                  token={`SKYLINE-MEMBER-${profile.studentId || profile.name || 'ACTIVE'}`}
+                  size={68}
+                  label="VERIFIED"
+                />
               </div>
             </div>
 

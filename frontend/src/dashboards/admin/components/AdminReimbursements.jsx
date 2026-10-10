@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { skylineApi, notifyDataRefresh } from '../../../services/api/skylineApi';
 
 /* ==========================================================================
    ADMIN REIMBURSEMENTS QUEUE — Authorization & Review (MOCK)
@@ -52,14 +53,29 @@ const STATUS_TABS = [
   { id: 'rejected', label: 'Rejected' },
 ];
 
+const normalizeStatus = (status) => {
+  const value = String(status || '').trim();
+  if (!value) return 'Pending Approval';
+  if (['pending', 'Pending', 'Pending Approval'].includes(value)) return 'Pending Approval';
+  if (['approved', 'Approved'].includes(value)) return 'Approved';
+  if (['rejected', 'Rejected'].includes(value)) return 'Rejected';
+  return value;
+};
+
 const badgeClass = (status) => {
-  if (status === 'approved') return 'skyline-badge badge-approved';
-  if (status === 'pending') return 'skyline-badge badge-pending';
+  const normalized = normalizeStatus(status);
+  if (normalized === 'Approved') return 'skyline-badge badge-approved';
+  if (normalized === 'Pending Approval') return 'skyline-badge badge-pending';
   return 'skyline-badge badge-rejected';
 };
 
 export function AdminReimbursements({ initialQueue }) {
   const [queue, setQueue] = useState(initialQueue || []);
+
+  useEffect(() => {
+    setQueue(initialQueue || []);
+  }, [initialQueue]);
+
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
@@ -77,14 +93,18 @@ export function AdminReimbursements({ initialQueue }) {
   const filtered = useMemo(() => {
     let list = queue;
     if (activeTab !== 'all') {
-      list = list.filter(item => item.status === activeTab);
+      list = list.filter(item => normalizeStatus(item.status) === {
+        pending: 'Pending Approval',
+        approved: 'Approved',
+        rejected: 'Rejected',
+      }[activeTab]);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(item =>
-        item.memberName.toLowerCase().includes(q) ||
-        item.title.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q) ||
+        (item.memberName || '').toLowerCase().includes(q) ||
+        (item.title || '').toLowerCase().includes(q) ||
+        (item.category || '').toLowerCase().includes(q) ||
         (item.department && item.department.toLowerCase().includes(q))
       );
     }
@@ -93,15 +113,15 @@ export function AdminReimbursements({ initialQueue }) {
 
   const counts = useMemo(() => ({
     all: queue.length,
-    pending: queue.filter(q => q.status === 'pending').length,
-    approved: queue.filter(q => q.status === 'approved').length,
-    rejected: queue.filter(q => q.status === 'rejected').length,
+    pending: queue.filter(q => normalizeStatus(q.status) === 'Pending Approval').length,
+    approved: queue.filter(q => normalizeStatus(q.status) === 'Approved').length,
+    rejected: queue.filter(q => normalizeStatus(q.status) === 'Rejected').length,
   }), [queue]);
 
   const totals = useMemo(() => {
-    const parse = (str) => parseFloat(str.replace(/[^0-9.]/g, '')) || 0;
-    const pendingVal = queue.filter(q => q.status === 'pending').reduce((sum, q) => sum + parse(q.amount), 0);
-    const approvedVal = queue.filter(q => q.status === 'approved').reduce((sum, q) => sum + parse(q.amount), 0);
+    const parse = (str) => parseFloat(String(str || '').replace(/[^0-9.]/g, '')) || 0;
+    const pendingVal = queue.filter(q => normalizeStatus(q.status) === 'Pending Approval').reduce((sum, q) => sum + parse(q.amount), 0);
+    const approvedVal = queue.filter(q => normalizeStatus(q.status) === 'Approved').reduce((sum, q) => sum + parse(q.amount), 0);
     return {
       pending: `$${pendingVal.toFixed(2)}`,
       approved: `$${approvedVal.toFixed(2)}`,
@@ -109,11 +129,17 @@ export function AdminReimbursements({ initialQueue }) {
   }, [queue]);
 
   /* ── Actions ── */
-  const handleApprove = (id) => {
-    setQueue(prev => prev.map(item => item.id === id ? { ...item, status: 'approved' } : item));
+  const handleApprove = async (id) => {
     const target = queue.find(q => q.id === id);
-    flash(`Approved claim '${target?.title}' for ${target?.amount} (mock)`);
-    if (inspectClaim?.id === id) setInspectClaim(null);
+    try {
+      await skylineApi.updateReimbursementStatus(id, 'Approved');
+      setQueue(prev => prev.map(item => item.id === id ? { ...item, status: 'Approved' } : item));
+      notifyDataRefresh('reimbursements');
+      flash(`Approved claim '${target?.title}' for ${target?.amount}.`);
+      if (inspectClaim?.id === id) setInspectClaim(null);
+    } catch (err) {
+      flash(err.message || 'Failed to approve claim.');
+    }
   };
 
   const handleOpenRejectModal = (claim) => {
@@ -121,15 +147,22 @@ export function AdminReimbursements({ initialQueue }) {
     setRejectReason('');
   };
 
-  const handleConfirmReject = (e) => {
+  const handleConfirmReject = async (e) => {
     e.preventDefault();
     if (!rejectClaimTarget) return;
-    setQueue(prev => prev.map(item =>
-      item.id === rejectClaimTarget.id ? { ...item, status: 'rejected', rejectReason: rejectReason || 'No reason provided' } : item
-    ));
-    flash(`Rejected claim '${rejectClaimTarget.title}' (mock)`);
-    setRejectClaimTarget(null);
-    if (inspectClaim?.id === rejectClaimTarget.id) setInspectClaim(null);
+    try {
+      await skylineApi.updateReimbursementStatus(rejectClaimTarget.id, 'Rejected');
+      setQueue(prev => prev.map(item =>
+        item.id === rejectClaimTarget.id ? { ...item, status: 'Rejected', rejectReason: rejectReason || 'No reason provided' } : item
+      ));
+      notifyDataRefresh('reimbursements');
+      flash(`Rejected claim '${rejectClaimTarget.title}'.`);
+    } catch (err) {
+      flash(err.message || 'Failed to reject claim.');
+    } finally {
+      setRejectClaimTarget(null);
+      if (inspectClaim?.id === rejectClaimTarget.id) setInspectClaim(null);
+    }
   };
 
   return (
@@ -214,9 +247,9 @@ export function AdminReimbursements({ initialQueue }) {
                         <IconFileText /> Inspect
                       </button>
                     </td>
-                    <td><span className={badgeClass(item.status)}>{item.status}</span></td>
+                    <td><span className={badgeClass(item.status)}>{normalizeStatus(item.status)}</span></td>
                     <td>
-                      {item.status === 'pending' ? (
+                      {normalizeStatus(item.status) === 'Pending Approval' ? (
                         <div className="table-actions" style={{ display: 'flex', gap: '4px' }}>
                           <button className="btn-table approve" onClick={() => handleApprove(item.id)}>
                             Approve
@@ -271,7 +304,7 @@ export function AdminReimbursements({ initialQueue }) {
             </div>
 
             <div className="admin-events-modal-actions">
-              {inspectClaim.status === 'pending' ? (
+              {normalizeStatus(inspectClaim.status) === 'Pending Approval' ? (
                 <>
                   <button className="btn-table reject" onClick={() => { handleOpenRejectModal(inspectClaim); }}>Reject Claim</button>
                   <button className="btn-create-event" style={{ background: '#059669' }} onClick={() => handleApprove(inspectClaim.id)}>Approve & Payout</button>

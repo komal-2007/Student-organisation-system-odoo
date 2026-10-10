@@ -17,6 +17,7 @@ import data from './data/coreMemberMockData';
 import { useAuth } from '../../services/auth/AuthContext';
 import { SharedProfile } from '../../features/account/SharedProfile';
 import { SharedSettings as SharedSettingsPanel } from '../../features/account/SharedSettings';
+import { skylineApi, subscribeToDataRefresh, notifyDataRefresh } from '../../services/api/skylineApi';
 
 const navigation = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -37,6 +38,7 @@ function CoreMemberDashboard() {
   const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [activePage, setActivePage] = useState('overview');
   const [tasks, setTasks] = useState(data.tasks);
+  const [events, setEvents] = useState([]);
   const [announcements, setAnnouncements] = useState(data.announcements);
   const [activity, setActivity] = useState(data.activityItems);
   const [preferences, setPreferences] = useState(data.preferences);
@@ -48,8 +50,57 @@ function CoreMemberDashboard() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [toast, setToast] = useState('');
 
+  const loadCoreLiveData = async () => {
+    try {
+      const [eventsRes, annRes, tasksRes] = await Promise.allSettled([
+        skylineApi.getEvents(),
+        skylineApi.getAnnouncements(),
+        skylineApi.getVolunteerTasks(),
+      ]);
+
+      if (eventsRes.status === 'fulfilled' && eventsRes.value?.events) {
+        const liveEvents = eventsRes.value.events.map((e) => ({
+          ...e,
+          location: e.venue || e.location || 'Campus Center',
+          venue: e.venue || e.location || 'Campus Center',
+          responsibility: e.responsibility || `Coordinate ${e.category || 'General'} setup & attendee check-in`,
+          status: e.status === 'upcoming' ? 'Upcoming' : (e.status || 'Upcoming'),
+        }));
+        setEvents(liveEvents);
+      }
+
+      if (annRes.status === 'fulfilled' && annRes.value?.announcements) {
+        setAnnouncements(annRes.value.announcements.map((a) => ({
+          ...a,
+          channel: a.audience || a.channel || 'All Members',
+          status: a.status || 'Published',
+          updatedAt: a.date || a.updatedAt || new Date().toISOString().slice(0, 10),
+        })));
+      }
+
+      if (tasksRes.status === 'fulfilled' && tasksRes.value?.tasks) {
+        setTasks(tasksRes.value.tasks.map((t) => ({
+          ...t,
+          dueDate: t.deadline || t.dueDate || new Date().toISOString().slice(0, 10),
+          owner: t.assignedTo || t.owner || 'You',
+          progress: t.status === 'Completed' ? 100 : t.status === 'In Progress' ? 50 : 0,
+        })));
+      }
+    } catch (err) {
+      console.warn('Core member live sync warning:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadCoreLiveData();
+    const unsubscribe = subscribeToDataRefresh(() => loadCoreLiveData());
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const selectedTask = tasks.find((task) => task.id === selectedTaskId);
-  const selectedEvent = data.upcomingEvents.find((event) => event.id === selectedEventId);
+  const selectedEvent = events.find((event) => event.id === selectedEventId) || data.upcomingEvents.find((event) => event.id === selectedEventId);
   const attentionCount = tasks.filter((task) => task.status !== 'Completed' && task.dueDate <= new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10)).length;
 
   useEffect(() => {
@@ -59,11 +110,12 @@ function CoreMemberDashboard() {
   }, [toast]);
 
   const page = useMemo(() => {
+    const activeEventsList = events.length > 0 ? events : data.upcomingEvents;
     switch (activePage) {
       case 'tasks':
         return <TasksPage tasks={tasks} query={query} onViewTask={setSelectedTaskId} />;
       case 'events':
-        return <EventsPage events={data.upcomingEvents} query={query} onViewEvent={setSelectedEventId} />;
+        return <EventsPage events={activeEventsList} query={query} onViewEvent={setSelectedEventId} />;
       case 'announcements':
         return <AnnouncementsPage announcements={announcements} query={query} onCreateAnnouncement={createAnnouncement} />;
       case 'workspace':
@@ -83,7 +135,7 @@ function CoreMemberDashboard() {
         return <OverviewPage
           summary={data.departmentSummary}
           tasks={tasks}
-          events={data.upcomingEvents}
+          events={activeEventsList}
           activity={activity}
           announcements={announcements}
           participation={data.participationByMonth}
@@ -93,7 +145,7 @@ function CoreMemberDashboard() {
           onNavigate={navigateTo}
         />;
     }
-  }, [activePage, tasks, query, announcements, activity, preferences]);
+  }, [activePage, tasks, events, query, announcements, activity, preferences]);
 
   function navigateTo(pageId) {
     setActivePage(pageId);
@@ -123,16 +175,21 @@ function CoreMemberDashboard() {
     setToast(status === 'Completed' ? 'Task marked complete.' : 'Task status updated.');
   }
 
-  function createAnnouncement(announcement) {
-    const today = new Date().toISOString().slice(0, 10);
-    setAnnouncements((items) => [{
-      id: `announcement-${Date.now()}`,
-      ...announcement,
-      status: 'Draft',
-      updatedAt: today,
-    }, ...items]);
-    addActivity(`Announcement draft created: ${announcement.title}.`, 'announcement');
-    setToast('Announcement draft saved in this sample workspace.');
+  async function createAnnouncement(announcement) {
+    try {
+      await skylineApi.createAnnouncement({
+        title: announcement.title,
+        content: announcement.body,
+        audience: announcement.channel,
+        status: 'Draft',
+      });
+      notifyDataRefresh('announcements');
+      addActivity(`Announcement draft created: ${announcement.title}.`, 'announcement');
+      setToast('Announcement draft created & saved to database.');
+      loadCoreLiveData();
+    } catch (err) {
+      setToast(err.message || 'Failed to save announcement.');
+    }
   }
 
   function updatePreference(key, value) {
@@ -162,7 +219,7 @@ function CoreMemberDashboard() {
           ))}
         </nav>
         <div className="sidebar-card"><ShieldCheck size={18} aria-hidden="true" /><div><strong>{data.profile.role}</strong><span>{data.profile.department}</span></div></div>
-        <p className="sidebar-data-note">Sample workspace · not connected to a live account</p>
+        <p className="sidebar-data-note">Department workspace • Live Connected</p>
       </aside>
 
       <div className="core-member-main">

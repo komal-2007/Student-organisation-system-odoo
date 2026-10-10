@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000/api';
 const VALID_ROLES = new Set(['admin', 'member', 'core_member']);
 const DEMO_SESSION_KEY = 'skyline-demo-session';
 const DEMO_USERS_KEY = 'skyline-demo-users';
@@ -24,10 +24,6 @@ function saveDemoUsers(users) {
   localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(users));
 }
 
-function usesDemoAuth() {
-  return import.meta.env.DEV && !API_BASE_URL;
-}
-
 function invalidCredentialsError() {
   const error = new Error('Username or password is incorrect.');
   error.code = 'INVALID_CREDENTIALS';
@@ -48,23 +44,26 @@ function normalizeRole(role) {
 }
 
 function normalizeUser(payload) {
-  const user = payload?.user;
+  const user = payload?.user || payload;
   const role = normalizeRole(user?.role);
   if (!user || typeof user.id !== 'string' || typeof user.username !== 'string' || !role) {
     throw new Error('The authentication service returned an invalid user profile.');
   }
-  return { id: user.id, username: user.username, role };
+  return { ...user, role };
 }
 
-async function apiRequest(endpoint, body) {
-  if (!API_BASE_URL) {
-    throw new Error('Authentication is not configured. Set VITE_API_BASE_URL to your authentication API.');
+async function apiRequest(endpoint, body, methodOverride) {
+  const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
+  const method = methodOverride || (body === undefined ? 'GET' : 'POST');
+  const headers = { 'Content-Type': 'application/json' };
+  if (sessionUser) {
+    headers.Authorization = 'Bearer ' + sessionUser;
+    headers['X-User-Id'] = sessionUser;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: body === undefined ? 'GET' : 'POST',
-    credentials: 'include',
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    method,
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
@@ -82,7 +81,12 @@ async function apiRequest(endpoint, body) {
 }
 
 export async function signIn(credentials) {
-  if (usesDemoAuth()) {
+  try {
+    const result = await apiRequest('/auth/login', credentials);
+    const user = normalizeUser(result);
+    sessionStorage.setItem(DEMO_SESSION_KEY, user.username);
+    return user;
+  } catch (err) {
     const users = getDemoUsers();
     const user = users[credentials.username];
     if (!user || user.password !== credentials.password) {
@@ -92,44 +96,47 @@ export async function signIn(credentials) {
     const { password, ...safeUser } = user;
     return safeUser;
   }
-  return normalizeUser(await apiRequest('/auth/login', credentials));
 }
 
 export async function getCurrentUser() {
-  if (usesDemoAuth()) {
+  const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
+  if (!sessionUser) return null;
+
+  try {
+    const result = await apiRequest('/auth/session');
+    return normalizeUser(result);
+  } catch (error) {
     const users = getDemoUsers();
-    const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
     if (sessionUser && users[sessionUser]) {
       const { password, ...safeUser } = users[sessionUser];
       return safeUser;
     }
     return null;
   }
-  try {
-    return normalizeUser(await apiRequest('/auth/session'));
-  } catch (error) {
-    if (error.code === 'INVALID_CREDENTIALS') return null;
-    throw error;
-  }
 }
 
 export async function updateProfile(updates) {
-  if (usesDemoAuth()) {
-    const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
+  const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
+  try {
+    const result = await apiRequest('/user/profile', updates, 'PUT');
+    return normalizeUser(result);
+  } catch (err) {
     const users = getDemoUsers();
     if (!sessionUser || !users[sessionUser]) throw new Error('Not authenticated');
-    
+
     users[sessionUser] = { ...users[sessionUser], ...updates };
     saveDemoUsers(users);
     const { password, ...safeUser } = users[sessionUser];
     return safeUser;
   }
-  return normalizeUser(await apiRequest('/auth/profile', updates));
 }
 
 export async function updatePassword(currentPassword, newPassword) {
-  if (usesDemoAuth()) {
-    const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
+  const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
+  try {
+    await apiRequest('/user/password', { currentPassword, newPassword });
+    return true;
+  } catch (err) {
     const users = getDemoUsers();
     if (!sessionUser || !users[sessionUser]) throw new Error('Not authenticated');
     if (users[sessionUser].password !== currentPassword) {
@@ -139,15 +146,14 @@ export async function updatePassword(currentPassword, newPassword) {
     saveDemoUsers(users);
     return true;
   }
-  await apiRequest('/auth/password', { currentPassword, newPassword });
-  return true;
 }
 
 export async function signOut() {
-  if (usesDemoAuth()) {
-    sessionStorage.removeItem(DEMO_SESSION_KEY);
-    return;
+  const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
+  try {
+    await apiRequest('/auth/logout', {});
+  } catch (err) {
+    // Ignore error on logout
   }
-  await apiRequest('/auth/logout', {});
+  sessionStorage.removeItem(DEMO_SESSION_KEY);
 }
-

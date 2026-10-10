@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { skylineApi, notifyDataRefresh } from '../../../services/api/skylineApi';
+import { useAuth } from '../../../services/auth/AuthContext';
 
 /* ==========================================================================
    ADMIN MEMBERS DIRECTORY — Full Management Screen (MOCK)
@@ -76,6 +78,12 @@ const STATUS_TABS = [
 const DEPARTMENTS = ['All', 'Executive', 'Operations', 'Finance', 'Tech', 'Marketing', 'Logistics', 'Events'];
 const ROLES = ['Member', 'Vice President', 'Treasurer', 'Marketing Lead', 'Tech Lead', 'Operations Lead', 'President / Admin'];
 
+const isProtectedAdminMember = (member) => {
+  if (!member) return false;
+  const role = String(member.role || '').toLowerCase();
+  return member.id === 'demo-admin' || role.includes('admin') || role.includes('president');
+};
+
 const badgeClass = (status) => {
   if (status === 'Active') return 'skyline-badge badge-approved';
   if (status === 'Pending Approval') return 'skyline-badge badge-pending';
@@ -83,7 +91,39 @@ const badgeClass = (status) => {
 };
 
 export function AdminMembers({ members: initialMembers }) {
-  const [members, setMembers] = useState(initialMembers || []);
+  const { user } = useAuth();
+
+  // Keep members in state; sync the logged-in admin's own row with live auth profile
+  const syncedInitial = useMemo(() => {
+    if (!initialMembers) return [];
+    return initialMembers.map(m => {
+      if (isProtectedAdminMember(m) && user?.name) {
+        return {
+          ...m,
+          name: user.name,
+          email: user.email || m.email,
+        };
+      }
+      return m;
+    });
+  }, [initialMembers, user?.name, user?.email]);
+
+  const [members, setMembers] = useState(syncedInitial);
+
+  useEffect(() => {
+    setMembers(syncedInitial);
+  }, [syncedInitial]);
+
+  // Keep the admin row live whenever the auth user profile changes
+  useEffect(() => {
+    if (!user?.name) return;
+    setMembers(prev => prev.map(m =>
+      isProtectedAdminMember(m)
+        ? { ...m, name: user.name, email: user.email || m.email }
+        : m
+    ));
+  }, [user?.name, user?.email]);
+
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [selectedDept, setSelectedDept] = useState('All');
@@ -130,27 +170,51 @@ export function AdminMembers({ members: initialMembers }) {
   }), [members]);
 
   /* ── Actions ── */
-  const handleApprove = (id) => {
-    setMembers(prev => prev.map(m => m.id === id ? { ...m, status: 'Active' } : m));
-    const target = members.find(m => m.id === id);
-    flash(`Approved registration for ${target?.name} (mock)`);
+  const handleApprove = async (id) => {
+    try {
+      await skylineApi.updateMemberStatus(id, 'Active');
+      setMembers(prev => prev.map(m => m.id === id ? { ...m, status: 'Active' } : m));
+      notifyDataRefresh('members');
+      const target = members.find(m => m.id === id);
+      flash(`Approved registration for ${target?.name} on backend!`);
+    } catch (err) {
+      flash(err.message || 'Failed to approve member.');
+    }
   };
 
-  const handleReject = (id) => {
-    setMembers(prev => prev.map(m => m.id === id ? { ...m, status: 'Inactive' } : m));
-    const target = members.find(m => m.id === id);
-    flash(`Rejected membership for ${target?.name} (mock)`);
+  const handleReject = async (id) => {
+    try {
+      await skylineApi.updateMemberStatus(id, 'Inactive');
+      setMembers(prev => prev.map(m => m.id === id ? { ...m, status: 'Inactive' } : m));
+      notifyDataRefresh('members');
+      const target = members.find(m => m.id === id);
+      flash(`Rejected membership for ${target?.name}.`);
+    } catch (err) {
+      flash(err.message || 'Failed to reject member.');
+    }
   };
 
-  const handleRemoveMember = () => {
+  const handleRemoveMember = async () => {
     if (!removeConfirmMember) return;
-    setMembers(prev => prev.filter(m => m.id !== removeConfirmMember.id));
-    flash(`Removed member ${removeConfirmMember.name} (mock)`);
-    setRemoveConfirmMember(null);
+    if (isProtectedAdminMember(removeConfirmMember)) {
+      flash('Admin accounts cannot be removed.');
+      setRemoveConfirmMember(null);
+      return;
+    }
+    try {
+      await skylineApi.removeMember(removeConfirmMember.id);
+      setMembers(prev => prev.filter(m => m.id !== removeConfirmMember.id));
+      notifyDataRefresh('members');
+      flash(`Removed member ${removeConfirmMember.name} from backend.`);
+    } catch (err) {
+      flash(err.message || 'Failed to remove member.');
+    } finally {
+      setRemoveConfirmMember(null);
+    }
   };
 
   const openEditRoleModal = (m) => {
-    if (m.role.includes('President') || m.id === 'mem-1') {
+    if (isProtectedAdminMember(m)) {
       flash('President / Admin role cannot be modified.');
       return;
     }
@@ -159,14 +223,26 @@ export function AdminMembers({ members: initialMembers }) {
     setNewDept(m.department);
   };
 
-  const handleSaveRole = (e) => {
+  const handleSaveRole = async (e) => {
     e.preventDefault();
     if (!editRoleMember) return;
-    setMembers(prev => prev.map(m =>
-      m.id === editRoleMember.id ? { ...m, role: newRole, department: newDept } : m
-    ));
-    flash(`Updated role and department for ${editRoleMember.name} (mock)`);
-    setEditRoleMember(null);
+    if (isProtectedAdminMember(editRoleMember)) {
+      flash('Admin accounts cannot be edited.');
+      setEditRoleMember(null);
+      return;
+    }
+    try {
+      await skylineApi.updateMemberRole(editRoleMember.id, newRole, newDept);
+      setMembers(prev => prev.map(m =>
+        m.id === editRoleMember.id ? { ...m, role: newRole, department: newDept } : m
+      ));
+      notifyDataRefresh('members');
+      flash(`Updated role and department for ${editRoleMember.name} on backend.`);
+    } catch (err) {
+      flash(err.message || 'Failed to update member role.');
+    } finally {
+      setEditRoleMember(null);
+    }
   };
 
   return (
@@ -257,7 +333,7 @@ export function AdminMembers({ members: initialMembers }) {
                           <IconEye />
                         </button>
                         
-                        {mem.status === 'Pending Approval' ? (
+                        {mem.status === 'Pending Approval' && !isProtectedAdminMember(mem) ? (
                           <>
                             <button className="btn-table approve" title="Approve member" onClick={() => handleApprove(mem.id)}>
                               Approve
@@ -266,7 +342,7 @@ export function AdminMembers({ members: initialMembers }) {
                               Reject
                             </button>
                           </>
-                        ) : mem.role.includes('President') ? (
+                        ) : isProtectedAdminMember(mem) ? (
                           <button
                             className="btn-table"
                             disabled

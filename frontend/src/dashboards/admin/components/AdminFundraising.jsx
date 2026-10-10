@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { skylineApi } from '../../../services/api/skylineApi';
 
 /* ==========================================================================
    ADMIN FUNDRAISING CAMPAIGNS — Full Management Hub (MOCK)
@@ -44,10 +45,26 @@ const INITIAL_FORM = {
   title: '', target: '', category: 'Hardware', endDate: '', description: ''
 };
 
+const normalizeCampaign = (campaign) => {
+  if (!campaign) return null;
+  const rawTarget = Number(campaign.rawTarget ?? (typeof campaign.target === 'string' ? Number(String(campaign.target).replace(/[^0-9.]/g, '')) : 0));
+  const rawRaised = Number(campaign.rawRaised ?? (typeof campaign.raised === 'string' ? Number(String(campaign.raised).replace(/[^0-9.]/g, '')) : 0));
+  const percentage = Number.isFinite(campaign.percentage)
+    ? campaign.percentage
+    : rawTarget > 0 ? Math.min(100, Math.round((rawRaised / rawTarget) * 100)) : 0;
+  return { ...campaign, rawTarget, rawRaised, percentage, status: campaign.status || 'Active', donorsCount: campaign.donorsCount || 0 };
+};
+
 export function AdminFundraising({ campaigns: initialCampaigns }) {
-  const [campaigns, setCampaigns] = useState(initialCampaigns || []);
+  const [campaigns, setCampaigns] = useState((initialCampaigns || []).map(normalizeCampaign).filter(Boolean));
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+
+  useEffect(() => {
+    if (initialCampaigns) {
+      setCampaigns((initialCampaigns || []).map(normalizeCampaign).filter(Boolean));
+    }
+  }, [initialCampaigns]);
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -84,30 +101,33 @@ export function AdminFundraising({ campaigns: initialCampaigns }) {
     };
   }, [campaigns]);
 
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.target) return;
+    const title = form.title.trim();
+    if (!title || !form.target) return;
 
-    const rawTarget = parseFloat(form.target);
-    const newCmp = {
-      id: `fnd-${Date.now()}`,
-      title: form.title,
-      target: `$${rawTarget.toLocaleString()}`,
-      raised: '$0',
-      rawTarget,
-      rawRaised: 0,
-      percentage: 0,
-      status: 'Active',
-      category: form.category,
-      endDate: form.endDate || '2026-12-31',
-      description: form.description,
-      donorsCount: 0,
-    };
+    const rawTarget = Number.parseFloat(String(form.target));
+    if (!Number.isFinite(rawTarget) || rawTarget <= 0) {
+      flash('Please enter a valid fundraising target greater than zero.');
+      return;
+    }
 
-    setCampaigns(prev => [newCmp, ...prev]);
-    flash(`Launched campaign "${form.title}" (mock)`);
-    setShowModal(false);
-    setForm(INITIAL_FORM);
+    try {
+      const response = await skylineApi.createFundraisingCampaign({
+        title,
+        target: rawTarget,
+        category: form.category,
+        endDate: form.endDate || '2026-12-31',
+        description: form.description,
+      });
+      const createdCampaign = normalizeCampaign(response?.campaign || response);
+      setCampaigns((prev) => (createdCampaign ? [createdCampaign, ...prev] : prev));
+      flash(`Launched campaign "${title}"`);
+      setShowModal(false);
+      setForm(INITIAL_FORM);
+    } catch (error) {
+      flash(error?.message || 'Unable to launch the fundraising campaign.');
+    }
   };
 
   return (

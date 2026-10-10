@@ -5,11 +5,25 @@ import PublicNavbar from './PublicNavbar';
 import PublicFooter from './PublicFooter';
 import PublicImage from './PublicImage';
 import { publicEvents } from '../data/publicMockData';
+import { useAuth } from '../../../services/auth/AuthContext';
+import { skylineApi } from '../../../services/api/skylineApi';
+import { PaymentCheckoutModal } from '../../../components/PaymentCheckoutModal';
 
 function EventDetails() {
   const { eventId } = useParams();
-  const event = publicEvents.find((item) => item.id === eventId);
+  const { user } = useAuth();
+  const event = publicEvents.find((item) => item.id === eventId) || { id: eventId, title: 'Campus Event', date: '2026-10-24', category: 'General', price: 0 };
   const [reservationNotice, setReservationNotice] = useState('');
+  const [issuedTicket, setIssuedTicket] = useState(null);
+  const [showCheckout, setShowCheckout] = useState(false);
+
+  const handleReserveSpot = () => {
+    if (!user) {
+      setReservationNotice('Please sign in to reserve your ticket.');
+      return;
+    }
+    setShowCheckout(true);
+  };
 
   if (!event) {
     return (
@@ -96,26 +110,35 @@ function EventDetails() {
               <button
                 type="button"
                 className="skyline-btn primary"
-                onClick={() =>
-                  setReservationNotice(
-                    'Reservations require member sign-in. Sign-in and ticket booking are not connected in this prototype.',
-                  )
-                }
+                onClick={handleReserveSpot}
               >
-                Reserve a Spot
+                Reserve Ticket via Payment Gateway
               </button>
               <Link className="skyline-btn secondary" to="/events">
                 Back to Events
               </Link>
             </div>
             {reservationNotice && (
-              <p className="action-feedback" role="status">
-                {reservationNotice} <Link to="/signin">View sign-in information</Link>
+              <p className="action-feedback" role="status" style={{ padding: '12px', borderRadius: '6px', background: issuedTicket ? '#ECFDF3' : '#F4F5FB', color: issuedTicket ? '#027A48' : '#101426', marginTop: '12px' }}>
+                {reservationNotice} {!user && <Link to="/signin">Sign In Now</Link>}
               </p>
             )}
           </div>
         </div>
       </main>
+      <PaymentCheckoutModal
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        type="ticket"
+        item={event}
+        user={user}
+        onSuccess={(result) => {
+          if (result?.ticket) {
+            setIssuedTicket(result.ticket);
+            setReservationNotice(`Success! Ticket #${result.ticket.ticketNumber} confirmed and issued for ${user?.name || 'you'}.`);
+          }
+        }}
+      />
       <PublicFooter />
     </div>
   );

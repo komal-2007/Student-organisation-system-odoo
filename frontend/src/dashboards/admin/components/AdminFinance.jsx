@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { skylineApi } from '../../../services/api/skylineApi';
 
 /* ==========================================================================
    ADMIN CLUB TREASURY & LEDGER (MOCK)
@@ -59,6 +60,13 @@ const INITIAL_FORM = {
 
 export function AdminFinance({ financeData }) {
   const [transactions, setTransactions] = useState(financeData?.recentTransactions || []);
+
+  React.useEffect(() => {
+    if (financeData?.recentTransactions) {
+      setTransactions(financeData.recentTransactions);
+    }
+  }, [financeData?.recentTransactions]);
+
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -99,29 +107,50 @@ export function AdminFinance({ financeData }) {
     expense: transactions.filter(t => t.type === 'expense').length,
   }), [transactions]);
 
-  const handleAddTransaction = (e) => {
+  const handleAddTransaction = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.amount) return;
 
-    const formattedAmount = form.type === 'income'
-      ? `+$${parseFloat(form.amount).toFixed(2)}`
-      : `-$${parseFloat(form.amount).toFixed(2)}`;
-
-    const newTx = {
-      ...form,
-      id: `tx-${Date.now()}`,
-      amount: formattedAmount,
-      ref: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
-    };
-
-    setTransactions(prev => [newTx, ...prev]);
-    flash(`Recorded transaction "${form.title}" (${formattedAmount}) (mock)`);
-    setShowModal(false);
-    setForm(INITIAL_FORM);
+    try {
+      const res = await skylineApi.addTransaction(form);
+      const newTx = res.transaction || {
+        ...form,
+        id: `tx-${Date.now()}`,
+        amount: form.type === 'income' ? `+$${parseFloat(form.amount).toFixed(2)}` : `-$${parseFloat(form.amount).toFixed(2)}`,
+        ref: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
+      };
+      setTransactions(prev => [newTx, ...prev]);
+      flash(`Recorded transaction "${form.title}" on backend treasury ledger!`);
+      setShowModal(false);
+      setForm(INITIAL_FORM);
+    } catch (err) {
+      flash(err.message || 'Failed to record transaction.');
+    }
   };
 
   const handleExportCSV = () => {
-    flash("Exported treasury ledger to CSV (mock download)");
+    const headers = ['Date', 'Title', 'Type', 'Category', 'Amount', 'Method', 'Reference', 'Notes'];
+    const rows = transactions.map(t => [
+      t.date || '',
+      `"${(t.title || '').replace(/"/g, '""')}"`,
+      t.type || '',
+      t.category || '',
+      t.amount || '',
+      t.method || '',
+      t.ref || '',
+      `"${(t.notes || '').replace(/"/g, '""')}"`,
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `skyline-treasury-ledger-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    flash(`Exported ${transactions.length} transactions to CSV`);
   };
 
   return (

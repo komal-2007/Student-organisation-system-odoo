@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarRange, Filter, Search, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './PublicDashboard.css';
@@ -14,18 +14,50 @@ import EventCard from './components/EventCard';
 import ProductCard from './components/ProductCard';
 import SignInPage from './components/SignInPage';
 import { merchandise, publicEvents } from './data/publicMockData';
+import { skylineApi, subscribeToDataRefresh } from '../../services/api/skylineApi';
 
 function PublicDashboard({ variant = 'home' }) {
+  const [liveEvents, setLiveEvents] = useState(publicEvents);
+  const [liveMerch, setLiveMerch] = useState(merchandise);
+
+  useEffect(() => {
+    let active = true;
+    async function loadPublicData() {
+      try {
+        const [evRes, meRes] = await Promise.allSettled([
+          skylineApi.getEvents(),
+          skylineApi.getMerchandise(),
+        ]);
+        if (!active) return;
+        if (evRes.status === 'fulfilled' && evRes.value.events) {
+          setLiveEvents(evRes.value.events);
+        }
+        if (meRes.status === 'fulfilled' && meRes.value.merchandise) {
+          setLiveMerch(meRes.value.merchandise);
+        }
+      } catch (err) {
+        console.warn('Public API load error:', err);
+      }
+    }
+
+    loadPublicData();
+    const unsubscribe = subscribeToDataRefresh(() => loadPublicData());
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedStock, setSelectedStock] = useState('All availability');
   const [merchSearchTerm, setMerchSearchTerm] = useState('');
 
-  const categories = ['All', ...new Set(publicEvents.map((event) => event.category))];
-  const stockOptions = ['All availability', ...new Set(merchandise.map((item) => item.stock))];
+  const categories = ['All', ...new Set(liveEvents.map((event) => event.category).filter(Boolean))];
+  const stockOptions = ['All availability', 'In Stock', 'Out of Stock'];
 
   const filteredEvents = useMemo(() => {
-    return publicEvents.filter((event) => {
+    return liveEvents.filter((event) => {
       const matchesCategory = selectedCategory === 'All' || event.category === selectedCategory;
       const query = searchTerm.trim().toLowerCase();
       const matchesSearch = [event.title, event.venue, event.category, event.description]
@@ -33,17 +65,19 @@ function PublicDashboard({ variant = 'home' }) {
         .some((value) => value.toLowerCase().includes(query));
       return matchesCategory && matchesSearch;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [liveEvents, searchTerm, selectedCategory]);
 
   const filteredMerchandise = useMemo(() => {
     const query = merchSearchTerm.trim().toLowerCase();
-    return merchandise.filter((item) => {
-      const matchesStock = selectedStock === 'All availability' || item.stock === selectedStock;
-      const matchesSearch = [item.name, item.description, item.stock, ...item.sizes]
+    return liveMerch.filter((item) => {
+      const itemStockText = item.inStock !== undefined ? (item.inStock ? 'In Stock' : 'Out of Stock') : (item.stock || 'In Stock');
+      const matchesStock = selectedStock === 'All availability' || itemStockText === selectedStock;
+      const matchesSearch = [item.name, item.description, itemStockText]
+        .filter(Boolean)
         .some((value) => value.toLowerCase().includes(query));
       return matchesStock && matchesSearch;
     });
-  }, [merchSearchTerm, selectedStock]);
+  }, [liveMerch, merchSearchTerm, selectedStock]);
 
   if (variant === 'events') {
     return (

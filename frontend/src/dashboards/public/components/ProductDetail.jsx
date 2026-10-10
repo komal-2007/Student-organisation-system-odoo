@@ -5,14 +5,18 @@ import PublicNavbar from './PublicNavbar';
 import PublicFooter from './PublicFooter';
 import PublicImage from './PublicImage';
 import { formatMerchandisePrice, merchandise } from '../data/publicMockData';
+import { useAuth } from '../../../services/auth/AuthContext';
+import { PaymentCheckoutModal } from '../../../components/PaymentCheckoutModal';
 
 function ProductDetail() {
+  const { user } = useAuth();
   const { productId } = useParams();
   const product = merchandise.find((item) => item.id === productId);
   const [quantity, setQuantity] = useState('1');
   const [selectedSize, setSelectedSize] = useState('');
   const [feedback, setFeedback] = useState('');
   const [saved, setSaved] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   if (!product) {
     return (
@@ -37,11 +41,11 @@ function ProductDetail() {
     }
 
     if (!selectedSize) {
-      setFeedback('Choose a size before adding this item.');
+      setFeedback('Choose a size before checking out this item.');
       return;
     }
 
-    setFeedback('Cart service is not connected. Your selection has not been saved or ordered.');
+    setShowCheckout(true);
   };
 
   return (
@@ -99,7 +103,7 @@ function ProductDetail() {
               <div className="product-detail__actions">
                 <button type="submit" className="skyline-btn primary">
                   <ShoppingCart size={16} />
-                  Add to cart
+                  Checkout via Sandbox Gateway
                 </button>
                 <button
                   type="button"
@@ -124,11 +128,21 @@ function ProductDetail() {
 
             <div className="demo-callout compact">
               <Sparkles size={16} />
-              Prototype checkout experience — no real payment is processed.
+              Skyline Club Store • Connected to Sandbox Payment Gateway.
             </div>
           </div>
         </div>
       </main>
+      <PaymentCheckoutModal
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        type="merchandise"
+        item={product}
+        user={user}
+        onSuccess={() => {
+          setFeedback('Order confirmed and recorded on backend treasury!');
+        }}
+      />
       <PublicFooter />
     </div>
   );
