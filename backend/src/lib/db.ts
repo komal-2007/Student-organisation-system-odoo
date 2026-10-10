@@ -29,6 +29,12 @@ export type SkylineDb = {
     update: PrismaClient["ticket"]["update"];
     count: PrismaClient["ticket"]["count"];
   };
+  announcement: {
+    findUnique: PrismaClient["announcement"]["findUnique"];
+    findMany: PrismaClient["announcement"]["findMany"];
+    create: PrismaClient["announcement"]["create"];
+    update: PrismaClient["announcement"]["update"];
+  };
   $transaction: PrismaClient["$transaction"];
 };
 

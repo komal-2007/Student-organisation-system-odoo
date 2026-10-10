@@ -5,8 +5,10 @@ import type { SkylineDb } from "./lib/db";
 import { verifyAccessToken, type VerifyAccessToken } from "./lib/jwt";
 import { prisma } from "./lib/prisma";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
+import { createAdminAnnouncementsRouter } from "./routes/adminAnnouncements";
 import { createAdminEventsRouter } from "./routes/adminEvents";
 import { createAdminMembersRouter } from "./routes/adminMembers";
+import { createAnnouncementsRouter } from "./routes/announcements";
 import { createEventsRouter } from "./routes/events";
 import { healthRouter } from "./routes/health";
 import { createMeRouter } from "./routes/me";
@@ -34,12 +36,20 @@ export function createApp(deps: AppDeps = {}) {
   app.use("/api/me", createMeRouter({ prisma: db, verifyAccessToken: verify }));
   app.use("/api/events", createEventsRouter({ prisma: db, verifyAccessToken: verify }));
   app.use(
+    "/api/announcements",
+    createAnnouncementsRouter({ prisma: db, verifyAccessToken: verify })
+  );
+  app.use(
     "/api/admin/members",
     createAdminMembersRouter({ prisma: db, verifyAccessToken: verify })
   );
   app.use(
     "/api/admin/events",
     createAdminEventsRouter({ prisma: db, verifyAccessToken: verify })
+  );
+  app.use(
+    "/api/admin/announcements",
+    createAdminAnnouncementsRouter({ prisma: db, verifyAccessToken: verify })
   );
 
   app.use(notFoundHandler);

@@ -89,6 +89,11 @@ Application users are **not** auto-created from a token. A valid token for an un
 | `PATCH` | `/api/admin/events/:id` | `ADMIN` | Update schedule/capacity/prices or `cancel` |
 | `GET` | `/api/admin/events/:id/tickets` | `ADMIN` or `TREASURER` | Ticket list, attendance count, pending vs completed revenue |
 | `POST` | `/api/admin/events/:id/tickets/validate` | `ADMIN` | `PAID` → `VALIDATED` once (`validatedAt` is attendance) |
+| `GET` | `/api/announcements` | bearer, linked user | `PUBLISHED` only for users with a current ACTIVE membership. `ADMIN` sees every status. |
+| `GET` | `/api/announcements/:id` | bearer, linked user | Same visibility. Unpublished rows are `404` for non-admins. |
+| `GET` | `/api/admin/announcements` | `ADMIN` | All drafts, published, and archived |
+| `POST` | `/api/admin/announcements` | `ADMIN` | Create; `createdById` from the verified user. Default status `DRAFT`. |
+| `PATCH` | `/api/admin/announcements/:id` | `ADMIN` | `title`, `body`, and/or `status` |
 
 ### Response shapes
 
@@ -172,6 +177,12 @@ Only `PAID` tickets for that event become `VALIDATED`. Repeating validation retu
 `PATCH /api/admin/members/:id` — body `{ "role"?: "STUDENT" | "ADMIN" | "TREASURER", "membershipStatus"?: "PENDING" | "ACTIVE" | "EXPIRED" | "CANCELLED" }`
 
 Allowed membership-status transitions: `PENDING → ACTIVE | CANCELLED`, `ACTIVE → EXPIRED | CANCELLED`. `EXPIRED` and `CANCELLED` cannot be moved by this endpoint. Roles are the Prisma `UserRole` enum only. Extra body fields are rejected.
+
+`POST /api/admin/announcements` — body `{ "title": string, "body": string, "status"?: "DRAFT" | "PUBLISHED" | "ARCHIVED" }` (201)
+
+Default status is `DRAFT` with `publishedAt: null`. Creating or transitioning to `PUBLISHED` sets `publishedAt` once. `createdById` and `publishedAt` in the request body are rejected.
+
+Allowed announcement-status transitions: `DRAFT → PUBLISHED | ARCHIVED`, `PUBLISHED → ARCHIVED`. `ARCHIVED` cannot be moved by this endpoint. There is no targeting table; member visibility is ACTIVE membership plus `PUBLISHED` status.
 
 Errors: `{ "error": "Unauthorized" | "Forbidden" | "Not Found" | "Bad Request" | "Conflict" | "...", "message": "..." }`.
 

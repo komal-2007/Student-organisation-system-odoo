@@ -1,4 +1,11 @@
-import type { Event, Membership, Payment, Ticket, User } from "@prisma/client";
+import type {
+  Announcement,
+  Event,
+  Membership,
+  Payment,
+  Ticket,
+  User,
+} from "@prisma/client";
 
 function dateOnly(value: Date): string {
   return value.toISOString().slice(0, 10);
@@ -80,6 +87,21 @@ export function serializeEvent(
       : {}),
     createdAt: event.createdAt.toISOString(),
     updatedAt: event.updatedAt.toISOString(),
+  };
+}
+
+export function serializeAnnouncement(announcement: Announcement) {
+  return {
+    id: announcement.id,
+    title: announcement.title,
+    body: announcement.body,
+    status: announcement.status,
+    createdById: announcement.createdById,
+    publishedAt: announcement.publishedAt
+      ? announcement.publishedAt.toISOString()
+      : null,
+    createdAt: announcement.createdAt.toISOString(),
+    updatedAt: announcement.updatedAt.toISOString(),
   };
 }
 
