@@ -15,6 +15,8 @@ import {
 } from './components/CoreMemberPages';
 import data from './data/coreMemberMockData';
 import { useAuth } from '../../services/auth/AuthContext';
+import { SharedProfile } from '../../features/account/SharedProfile';
+import { SharedSettings as SharedSettingsPanel } from '../../features/account/SharedSettings';
 
 const navigation = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -29,7 +31,10 @@ const navigation = [
 const pageTitles = Object.fromEntries(navigation.map(({ id, label }) => [id, label]));
 
 function CoreMemberDashboard() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const displayName = user?.name || user?.username || data.profile.name;
+  const displayRole = user?.department ? `${data.profile.role} · ${user.department}` : data.profile.role;
+  const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [activePage, setActivePage] = useState('overview');
   const [tasks, setTasks] = useState(data.tasks);
   const [announcements, setAnnouncements] = useState(data.announcements);
@@ -66,7 +71,14 @@ function CoreMemberDashboard() {
       case 'team':
         return <TeamPage members={data.teamMembers} query={query} />;
       case 'settings':
-        return <SettingsPage preferences={preferences} onChange={updatePreference} />;
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <SettingsPage preferences={preferences} onChange={updatePreference} />
+            <SharedSettingsPanel />
+          </div>
+        );
+      case 'profile':
+        return <SharedProfile />;
       default:
         return <OverviewPage
           summary={data.departmentSummary}
@@ -172,14 +184,14 @@ function CoreMemberDashboard() {
               </button>
               {notificationsOpen && <div className="notification-popover"><strong>Needs attention</strong>{attentionCount ? tasks.filter((task) => task.status !== 'Completed' && task.dueDate <= new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10)).slice(0, 4).map((task) => <button key={task.id} type="button" onClick={() => { setSelectedTaskId(task.id); setNotificationsOpen(false); }}><span>{task.title}</span><small>{task.dueDate < new Date().toISOString().slice(0, 10) ? 'Overdue' : `Due ${task.dueDate}`}</small></button>) : <p>No urgent tasks. You’re all caught up.</p>}<button className="notification-footer" type="button" onClick={navigateFromNotice}>Review tasks <ChevronRight size={15} /></button></div>}
             </div>
-            <div className="profile-chip" aria-label={`${data.profile.name}, ${data.profile.role}`} style={{ position: 'relative' }}>
+            <div className="profile-chip" aria-label={`${displayName}, ${displayRole}`} style={{ position: 'relative' }}>
               <button
                 type="button"
                 style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
                 onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false); }}
               >
-                <span className="profile-avatar" aria-hidden="true">MC</span>
-                <span className="profile-name">{data.profile.name}<small>{data.profile.role}</small></span>
+                <span className="profile-avatar" aria-hidden="true">{initials}</span>
+                <span className="profile-name">{displayName}<small>{displayRole}</small></span>
               </button>
               {profileOpen && (
                 <div style={{
@@ -190,7 +202,7 @@ function CoreMemberDashboard() {
                   <button
                     type="button"
                     style={{ width: '100%', textAlign: 'left', padding: '10px 12px', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', borderRadius: 6, color: '#101426' }}
-                    onMouseDown={(e) => { e.stopPropagation(); alert('My Profile (Mock)'); setProfileOpen(false); }}
+                    onMouseDown={(e) => { e.stopPropagation(); navigateTo('profile'); setProfileOpen(false); }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#F4F5FB'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                   >

@@ -10,6 +10,8 @@ import AdminMembers from './components/AdminMembers';
 import AdminVolunteers from './components/AdminVolunteers';
 import AdminFundraising from './components/AdminFundraising';
 import AdminAnnouncements from './components/AdminAnnouncements';
+import { SharedProfile } from '../../features/account/SharedProfile';
+import { SharedSettings } from '../../features/account/SharedSettings';
 
 /* ── SVG Icon Components ── */
 const Icon = ({ children, size = 20 }) => (
@@ -118,7 +120,10 @@ import { useAuth } from '../../services/auth/AuthContext';
  * Role-restricted executive command center for club administration.
  */
 export function AdminDashboard() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const displayName = user?.name || user?.username || 'Admin';
+  const displayTitle = user?.title || 'Club President';
+  const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [activeSection, setActiveSection] = useState('overview');
   const [adminData] = useState(ADMIN_MOCK_DATA);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -145,9 +150,11 @@ export function AdminDashboard() {
     announcements: { title: 'Announcements', subtitle: 'Broadcast updates to organization members' },
     fundraising: { title: 'Fundraising Campaigns', subtitle: 'Track active campaigns and fundraising progress' },
     volunteers: { title: 'Volunteer Tasks', subtitle: 'Assign, track, and manage volunteer work' },
+    profile: { title: 'My Profile', subtitle: 'Manage your personal details and account information' },
+    settings: { title: 'Settings', subtitle: 'Account preferences and security' },
   };
 
-  const current = sectionTitles[activeSection];
+  const current = sectionTitles[activeSection] || { title: 'Dashboard', subtitle: '' };
 
   return (
     <div className="admin-shell">
@@ -207,16 +214,16 @@ export function AdminDashboard() {
             {/* Profile */}
             <div className="topbar-dropdown" ref={profileRef}>
               <button className="topbar-profile-btn" onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}>
-                <div className="topbar-avatar">KB</div>
+                <div className="topbar-avatar">{initials}</div>
                 <div className="topbar-profile-info">
-                  <span className="topbar-profile-name">Komal Bhatia</span>
-                  <span className="topbar-profile-role">Club President</span>
+                  <span className="topbar-profile-name">{displayName}</span>
+                  <span className="topbar-profile-role">{displayTitle}</span>
                 </div>
               </button>
               {profileOpen && (
                 <div className="dropdown-panel profile-panel">
-                  <div className="dropdown-item" onMouseDown={(e) => { e.stopPropagation(); alert('My Profile (Mock)'); setProfileOpen(false); }}>My Profile</div>
-                  <div className="dropdown-item" onMouseDown={(e) => { e.stopPropagation(); alert('Settings (Mock)'); setProfileOpen(false); }}>Settings</div>
+                  <div className="dropdown-item" onMouseDown={(e) => { e.stopPropagation(); setActiveSection('profile'); setProfileOpen(false); }}>My Profile</div>
+                  <div className="dropdown-item" onMouseDown={(e) => { e.stopPropagation(); setActiveSection('settings'); setProfileOpen(false); }}>Settings</div>
                   <div className="dropdown-item" onMouseDown={async (e) => { 
                     e.stopPropagation(); 
                     setProfileOpen(false); 
@@ -283,6 +290,8 @@ export function AdminDashboard() {
           {activeSection === 'volunteers' && <AdminVolunteers tasks={adminData.volunteerTasks} />}
           {activeSection === 'fundraising' && <AdminFundraising campaigns={adminData.fundraisingCampaigns} />}
           {activeSection === 'announcements' && <AdminAnnouncements announcements={adminData.announcements} />}
+          {activeSection === 'profile' && <SharedProfile />}
+          {activeSection === 'settings' && <SharedSettings />}
         </div>
       </div>
     </div>

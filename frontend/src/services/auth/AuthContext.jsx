@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { getCurrentUser, signIn as authenticate, signOut as endSession } from './authService';
+import { getCurrentUser, signIn as authenticate, signOut as endSession, updateProfile, updatePassword } from './authService';
 
 const AuthContext = createContext(null);
 
@@ -41,12 +41,24 @@ export function AuthProvider({ children }) {
     setSessionError('');
   }
 
+  async function updateProfileLocal(updates) {
+    const updatedUser = await updateProfile(updates);
+    setUser(updatedUser);
+    return updatedUser;
+  }
+
+  async function changePassword(currentPassword, newPassword) {
+    return await updatePassword(currentPassword, newPassword);
+  }
+
   const value = useMemo(() => ({
     user,
     loading,
     sessionError,
     login,
     logout,
+    updateProfile: updateProfileLocal,
+    changePassword,
   }), [user, loading, sessionError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

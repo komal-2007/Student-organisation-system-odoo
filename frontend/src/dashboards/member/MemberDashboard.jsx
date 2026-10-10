@@ -102,15 +102,20 @@ const MEMBER_NAV_ITEMS = [
   { id: 'announcements', label: 'Announcements', icon: IconBell },
 ];
 
+import { useAuth } from '../../services/auth/AuthContext';
+import { SharedProfile } from '../../features/account/SharedProfile';
+import { SharedSettings } from '../../features/account/SharedSettings';
+
 /**
  * DASHBOARD 3: Registered Member
  * Personalized portal for authenticated student members.
  * Strictly isolates personal data; contains NO admin ledgers or approvals.
  */
-import { useAuth } from '../../services/auth/AuthContext';
-
 export function MemberDashboard() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const displayName = user?.name || user?.username || 'Member';
+  const displayRole = user?.membershipTier ? `${user.membershipTier} Member` : 'Registered Member';
+  const initials = displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   const [activeSection, setActiveSection] = useState('overview');
   const [memberData] = useState(MEMBER_MOCK_DATA);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -160,6 +165,14 @@ export function MemberDashboard() {
     announcements: {
       title: 'Member Announcements Feed',
       subtitle: 'Official organization updates, deadline alerts, and campus notices',
+    },
+    profile: {
+      title: 'My Profile',
+      subtitle: 'Manage your personal details and membership information',
+    },
+    settings: {
+      title: 'Settings',
+      subtitle: 'Account preferences and security',
     },
   };
 
@@ -244,10 +257,10 @@ export function MemberDashboard() {
                   setNotifOpen(false);
                 }}
               >
-                <div className="topbar-avatar member-avatar-grad">AJ</div>
+                <div className="topbar-avatar member-avatar-grad">{initials}</div>
                 <div className="topbar-profile-info">
-                  <span className="topbar-profile-name">{memberData.profile.name}</span>
-                  <span className="topbar-profile-role">{memberData.profile.role}</span>
+                  <span className="topbar-profile-name">{displayName}</span>
+                  <span className="topbar-profile-role">{displayRole}</span>
                 </div>
               </button>
               {profileOpen && (
@@ -257,7 +270,7 @@ export function MemberDashboard() {
                     className="dropdown-item"
                     onMouseDown={(e) => {
                       e.stopPropagation();
-                      alert('My Profile (Mock)');
+                      setActiveSection('profile');
                       setProfileOpen(false);
                     }}
                   >
@@ -268,7 +281,7 @@ export function MemberDashboard() {
                     className="dropdown-item"
                     onMouseDown={(e) => {
                       e.stopPropagation();
-                      alert('Settings (Mock)');
+                      setActiveSection('settings');
                       setProfileOpen(false);
                     }}
                   >
@@ -325,6 +338,8 @@ export function MemberDashboard() {
           {activeSection === 'announcements' && (
             <MemberAnnouncements announcements={memberData.announcements} />
           )}
+          {activeSection === 'profile' && <SharedProfile />}
+          {activeSection === 'settings' && <SharedSettings />}
         </div>
       </div>
     </div>
