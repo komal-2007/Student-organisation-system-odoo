@@ -1,0 +1,160 @@
+/* ==========================================================================
+   Dashboard 1 — Admin / Club President Theme (Skyline Midnight Navy)
+   ========================================================================== */
+.admin-dashboard-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0f172a;
+}
+
+.admin-header-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #4f46e5 100%);
+  color: #ffffff;
+  padding: 28px 32px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.admin-banner-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.01em;
+}
+
+.admin-banner-subtitle {
+  font-size: 14px;
+  color: #c7d2fe;
+  margin: 0;
+}
+
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.admin-tabs-nav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.admin-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-tab-btn.active {
+  color: #7c3aed;
+  border-bottom-color: #7c3aed;
+}
+
+.admin-tab-btn:hover:not(.active) {
+  color: #0f172a;
+}
+
+.skyline-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05);
+  margin-bottom: 24px;
+}
+
+.skyline-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.skyline-card-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px 0;
+}
+
+.skyline-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.skyline-table th,
+.skyline-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.skyline-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+}
+
+.skyline-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-pending { background: #fef3c7; color: #d97706; }
+.badge-approved, .badge-active { background: #d1fae5; color: #059669; }
+.badge-rejected { background: #fee2e2; color: #dc2626; }
+.badge-income { background: #dcfce7; color: #166534; }
+.badge-expense { background: #fee2e2; color: #991b1b; }
+
+.btn-table {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+.btn-table.approve { background: #10b981; color: white; margin-right: 6px; }
+.btn-table.reject { background: #ef4444; color: white; }
+
+.finance-summary-pills {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.pill-stat {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.pill-stat.income { background: #ecfdf5; color: #059669; }
+.pill-stat.expense { background: #fef2f2; color: #dc2626; }
+.pill-stat.balance { background: #f5f3ff; color: #7c3aed; }
