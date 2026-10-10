@@ -9,7 +9,7 @@ This is a small Node.js + TypeScript + Express server. It currently has a health
 - Node.js 18 or newer (this project was set up with Node.js 22)
 - npm (comes with Node.js)
 
-All commands below should be run from the `backend` folder.
+
 
 ## Setup
 
