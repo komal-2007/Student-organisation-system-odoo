@@ -23,7 +23,8 @@
       "name": "Alex Johnson",
       "joinedDate": "Jan 2025",
       "status": "Active",
-      "email": "alex.j@skyline.edu"
+      "email": "alex.j@skyline.edu",
+      "department": "Finance"
     },
     {
       "id": "demo-core-member",
@@ -408,7 +409,8 @@
       "date": "2026-10-10",
       "body": "Join us this Thursday at 6:00 PM in Hall A for our monthly all-hands update. Agenda items include Fall hackathon logistics, budget allocations, and new member introductions.",
       "title": "General Body Meeting Scheduled for Thursday",
-      "priority": "High"
+      "priority": "High",
+      "authorId": "demo-admin"
     },
     {
       "id": "ann-2",

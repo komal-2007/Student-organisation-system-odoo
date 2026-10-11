@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useAuth } from '../../../services/auth/AuthContext';
 
 /* ==========================================================================
    ADMIN ANNOUNCEMENTS BROADCAST PUBLISHER (MOCK)
@@ -80,7 +81,16 @@ const badgeClass = (priority) => {
 };
 
 export function AdminAnnouncements({ announcements: initialAnnouncements }) {
-  const [announcements, setAnnouncements] = useState(initialAnnouncements || []);
+  const { user } = useAuth();
+  const currentAnnouncements = (initialAnnouncements || []).map((announcement) => {
+    const isLegacyPresidentAnnouncement = user?.id === 'demo-admin'
+      && announcement.id === 'ann-1'
+      && announcement.author === 'Komal Bhatia';
+    return announcement.authorId === user?.id || isLegacyPresidentAnnouncement
+      ? { ...announcement, author: user.name }
+      : announcement;
+  });
+  const [announcements, setAnnouncements] = useState(currentAnnouncements);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
@@ -90,6 +100,10 @@ export function AdminAnnouncements({ announcements: initialAnnouncements }) {
   const [detailAnn, setDetailAnn] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    setAnnouncements(currentAnnouncements);
+  }, [initialAnnouncements, user?.id, user?.name]);
 
   const flash = (msg) => {
     setSuccessMsg(msg);
@@ -161,7 +175,7 @@ export function AdminAnnouncements({ announcements: initialAnnouncements }) {
         ...form,
         id: `ann-${Date.now()}`,
         date: new Date().toISOString().split('T')[0],
-        author: 'Komal Bhatia',
+        author: user?.name || user?.username || 'Club Admin',
       };
       setAnnouncements(prev => [newAnn, ...prev]);
       flash(`Broadcast published: "${form.title}" (mock)`);

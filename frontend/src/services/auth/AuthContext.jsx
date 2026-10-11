@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getCurrentUser, signIn as authenticate, signOut as endSession, updateProfile, updatePassword } from './authService';
+import { notifyDataRefresh } from '../api/skylineApi';
 
 const AuthContext = createContext(null);
 
@@ -44,6 +45,7 @@ export function AuthProvider({ children }) {
   async function updateProfileLocal(updates) {
     const updatedUser = await updateProfile(updates);
     setUser(updatedUser);
+    notifyDataRefresh('profile');
     return updatedUser;
   }
 

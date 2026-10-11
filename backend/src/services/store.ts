@@ -106,6 +106,7 @@ export interface AnnouncementRecord {
   id: string;
   title: string;
   body: string;
+  authorId?: string;
   category?: string;
   author?: string;
   priority?: string;
@@ -162,8 +163,8 @@ const INITIAL_DB: DatabaseSchema = {
       id: 'demo-admin',
       username: 'admin1',
       password: 'admin123',
-      name: 'Komal Bhatia',
-      email: 'komal@skyline.edu',
+      name: 'Priya',
+      email: 'priya@skyline.edu',
       role: 'admin',
       department: 'Executive',
       title: 'Club President',
@@ -446,6 +447,7 @@ const INITIAL_DB: DatabaseSchema = {
       body: 'Join us this Thursday at 6:00 PM in Hall A for our monthly all-hands update. Agenda items include Fall hackathon logistics, budget allocations, and new member introductions.',
       date: '2026-10-10',
       category: 'Meeting',
+      authorId: 'demo-admin',
       author: 'Komal Bhatia',
       priority: 'High',
       audience: 'All Members',

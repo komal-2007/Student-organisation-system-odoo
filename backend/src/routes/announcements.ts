@@ -1,14 +1,26 @@
 import { Router, Request, Response } from 'express';
-import { store } from '../services/store';
+import { store, AnnouncementRecord } from '../services/store';
 
 const router = Router();
 
-// Helper: resolve current author name from users by stored authorId
-const resolveAuthorName = (ann: { authorId?: string; author?: string }): string => {
-  if (ann.authorId) {
-    const user = store.db.users.find((u) => u.id === ann.authorId);
-    if (user && typeof user.name === 'string') return user.name;
-  }
+const getAnnouncementAuthorId = (ann: AnnouncementRecord) => {
+  if (ann.authorId) return ann.authorId;
+
+  const matchingUser = store.db.users.find(
+    (user) => user.name.trim().toLowerCase() === String(ann.author || '').trim().toLowerCase()
+  );
+  if (matchingUser) return matchingUser.id;
+
+  // Older seed data stored the president's name without a user ID.
+  if (ann.id === 'ann-1' && ann.author === 'Komal Bhatia') return 'demo-admin';
+  return undefined;
+};
+
+// Resolve the current author name so profile renames are reflected.
+const resolveAuthorName = (ann: AnnouncementRecord): string => {
+  const authorId = getAnnouncementAuthorId(ann);
+  const user = authorId ? store.db.users.find((entry) => entry.id === authorId) : undefined;
+  if (user) return user.name;
   return typeof ann.author === 'string' ? ann.author : 'Club Admin';
 };
 

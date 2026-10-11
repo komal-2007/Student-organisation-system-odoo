@@ -116,19 +116,8 @@ export async function getCurrentUser() {
 }
 
 export async function updateProfile(updates) {
-  const sessionUser = sessionStorage.getItem(DEMO_SESSION_KEY);
-  try {
-    const result = await apiRequest('/user/profile', updates, 'PUT');
-    return normalizeUser(result);
-  } catch (err) {
-    const users = getDemoUsers();
-    if (!sessionUser || !users[sessionUser]) throw new Error('Not authenticated');
-
-    users[sessionUser] = { ...users[sessionUser], ...updates };
-    saveDemoUsers(users);
-    const { password, ...safeUser } = users[sessionUser];
-    return safeUser;
-  }
+  const result = await apiRequest('/user/profile', updates, 'PUT');
+  return normalizeUser(result);
 }
 
 export async function updatePassword(currentPassword, newPassword) {
