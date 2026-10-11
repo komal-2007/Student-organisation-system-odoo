@@ -21,6 +21,8 @@ cp .env.example .env
 
 Keep real secrets in `.env` only. Never commit them.
 
+The backend loads `backend/.env` from both development and compiled entry points. Set `PORT=3001` and `CORS_ORIGIN="http://localhost:3000"` for local frontend development. The root Git ignore rules exclude `.env` and `.env.local`.
+
 Required to **start the HTTP server** (`npm run dev` / `npm start`):
 
 | Variable | Purpose |
@@ -46,7 +48,7 @@ The initial schema lives in `prisma/schema.prisma` with SQL in `prisma/migration
 npm run dev
 ```
 
-Health check: [http://localhost:3000/api/health](http://localhost:3000/api/health) → `{ "status": "ok" }`
+Health check: [http://localhost:3001/api/health](http://localhost:3001/api/health) → `{ "status": "ok" }`
 
 ## Build and run for production
 

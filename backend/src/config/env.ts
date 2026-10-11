@@ -27,7 +27,7 @@ const derivedIssuer = supabaseUrl
   : undefined;
 
 export const env = {
-  port: Number(process.env.PORT) || 3000,
+  port: Number(process.env.PORT) || 3001,
   nodeEnv: process.env.NODE_ENV || "development",
   databaseUrl: optional("DATABASE_URL") ?? "",
   directUrl: optional("DIRECT_URL") ?? "",
