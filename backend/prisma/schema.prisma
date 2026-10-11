@@ -4,4 +4,158 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid())
+  username       String          @unique
+  password       String
+  name           String
+  email          String          @unique
+  role           String          // admin, member, core_member
+  department     String?
+  title          String?
+  membershipTier String?
+  studentId      String?
+  status         String          @default("Active") // Active, Pending Approval, Inactive
+  joinedDate     String?
+  phone          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  tickets        Ticket[]
+  orders         Order[]
+  reimbursements Reimbursement[]
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  date        String
+  time        String?
+  venue       String?
+  category    String?
+  capacity    Int      @default(100)
+  registered  Int      @default(0)
+  status      String   @default("upcoming") // upcoming, draft, past
+  description String?
+  organizer   String?
+  ticketPrice String   @default("Free")
+  rawPrice    Float    @default(0.0)
+  createdAt   DateTime @default(now())
+  tickets     Ticket[]
+}
+
+model Ticket {
+  id           String   @id @default(uuid())
+  ticketNumber String   @unique
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id])
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  qrToken      String   @unique
+  status       String   @default("VALID") // VALID, USED, CANCELLED
+  paymentRef   String?
+  paidAmount   Float    @default(0.0)
+  checkedInAt  DateTime?
+  createdAt    DateTime @default(now())
+}
+
+model MerchandiseItem {
+  id          String   @id @default(uuid())
+  name        String
+  price       String
+  rawPrice    Float
+  category    String
+  inStock     Boolean  @default(true)
+  stockCount  Int      @default(50)
+  image       String?
+  description String?
+  orders      Order[]
+}
+
+model Order {
+  id          String          @id @default(uuid())
+  orderNumber String          @unique
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  itemId      String
+  item        MerchandiseItem @relation(fields: [itemId], references: [id])
+  quantity    Int             @default(1)
+  totalPrice  Float
+  status      String          @default("CONFIRMED") // CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  paymentRef  String?
+  pickupLoc   String?         @default("Campus Center Room 204")
+  createdAt   DateTime        @default(now())
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  title     String
+  type      String   // income, expense
+  amount    String
+  rawAmount Float
+  category  String
+  method    String?
+  ref       String?
+  notes     String?
+  date      String
+  createdAt DateTime @default(now())
+}
+
+model Reimbursement {
+  id          String   @id @default(uuid())
+  claimNumber String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  amount      String
+  rawAmount   Float
+  category    String
+  date        String
+  status      String   @default("Pending Approval") // Pending Approval, Approved, Paid, Rejected
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  body      String
+  category  String?  @default("General")
+  author    String?
+  priority  String?  @default("Normal")
+  audience  String?  @default("All Members")
+  pinned    Boolean  @default(false)
+  date      String
+  createdAt DateTime @default(now())
+}
+
+model VolunteerTask {
+  id         String   @id @default(uuid())
+  title      String
+  department String
+  assignee   String?
+  status     String   @default("Pending") // Pending, In Progress, Review, Completed
+  priority   String   @default("Medium")
+  dueDate    String
+  notes      String?
+  progress   Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model FundraisingCampaign {
+  id          String   @id @default(uuid())
+  title       String
+  target      String
+  raised      String
+  rawTarget   Float
+  rawRaised   Float
+  percentage  Int      @default(0)
+  status      String   @default("Active")
+  category    String?
+  endDate     String?
+  description String?
+  donorsCount Int      @default(0)
+  createdAt   DateTime @default(now())
 }

@@ -1,0 +1,465 @@
+{
+  "users": [
+    {
+      "id": "demo-admin",
+      "username": "admin1",
+      "password": "admin123",
+      "title": "Club President",
+      "role": "admin",
+      "name": "Komal Bhatia",
+      "studentId": "SKY-2024-001",
+      "status": "Active",
+      "joinedDate": "Sep 2024",
+      "department": "Executive",
+      "email": "komal@skyline.edu"
+    },
+    {
+      "id": "demo-member",
+      "username": "mem1",
+      "membershipTier": "Premium",
+      "password": "mem123",
+      "studentId": "ST-92841",
+      "role": "member",
+      "name": "Alex Johnson",
+      "joinedDate": "Jan 2025",
+      "status": "Active",
+      "email": "alex.j@skyline.edu"
+    },
+    {
+      "id": "demo-core-member",
+      "username": "core_mem",
+      "password": "Core123",
+      "title": "Marketing Lead",
+      "role": "core_member",
+      "name": "Morgan Chen",
+      "status": "Active",
+      "joinedDate": "Feb 2025",
+      "department": "Marketing",
+      "email": "morgan@skyline.edu"
+    },
+    {
+      "id": "mem-2",
+      "username": "sarah_j",
+      "password": "user123",
+      "title": "Vice President",
+      "role": "admin",
+      "name": "Sarah Jenkins",
+      "studentId": "SKY-2025-042",
+      "status": "Active",
+      "joinedDate": "Jan 2025",
+      "department": "Operations",
+      "email": "sarah@campus.edu"
+    },
+    {
+      "id": "mem-3",
+      "username": "alex_r",
+      "password": "user123",
+      "title": "Treasurer",
+      "role": "core_member",
+      "name": "Alex Rivera",
+      "studentId": "SKY-2025-108",
+      "status": "Active",
+      "joinedDate": "Sep 2025",
+      "department": "Finance",
+      "email": "alex@campus.edu"
+    },
+    {
+      "id": "mem-4",
+      "username": "david_c",
+      "password": "user123",
+      "studentId": "SKY-2026-210",
+      "role": "member",
+      "name": "David Chen",
+      "status": "Pending Approval",
+      "joinedDate": "Oct 2026",
+      "department": "Tech",
+      "email": "david@campus.edu"
+    },
+    {
+      "id": "mem-5",
+      "username": "elena_r",
+      "password": "user123",
+      "title": "Marketing Lead",
+      "role": "core_member",
+      "name": "Elena Rostova",
+      "studentId": "SKY-2025-088",
+      "status": "Active",
+      "joinedDate": "Feb 2025",
+      "department": "Marketing",
+      "email": "elena@campus.edu"
+    },
+    {
+      "id": "mem-6",
+      "username": "marcus_v",
+      "password": "user123",
+      "studentId": "SKY-2026-215",
+      "role": "member",
+      "name": "Marcus Vance",
+      "status": "Pending Approval",
+      "joinedDate": "Oct 2026",
+      "department": "Logistics",
+      "email": "marcus@campus.edu"
+    }
+  ],
+  "events": [
+    {
+      "status": "upcoming",
+      "id": "evt-101",
+      "time": "09:00 AM",
+      "title": "HackCampus 2026: 24-Hour Innovation Sprint",
+      "category": "Hackathon",
+      "description": "Annual 24-hour hackathon open to all departments.",
+      "venue": "Engineering Hall B",
+      "capacity": 250,
+      "ticketPrice": "Free",
+      "rawPrice": 0,
+      "registered": 218,
+      "date": "2026-10-24",
+      "organizer": "Komal Bhatia"
+    },
+    {
+      "status": "upcoming",
+      "id": "evt-102",
+      "time": "02:00 PM",
+      "title": "AI & Machine Learning Career Workshop",
+      "category": "Workshop",
+      "description": "Industry speakers from Google and DeepMind.",
+      "venue": "Lecture Theatre 4",
+      "capacity": 80,
+      "ticketPrice": "$5.00",
+      "rawPrice": 5,
+      "registered": 77,
+      "date": "2026-10-28",
+      "organizer": "Sarah Jenkins"
+    },
+    {
+      "status": "upcoming",
+      "id": "evt-103",
+      "time": "05:00 PM",
+      "title": "Fall Semester Campus Mixer & Club Fair",
+      "category": "Social",
+      "description": "Open campus mixer featuring all student clubs.",
+      "venue": "Campus Quad",
+      "capacity": 500,
+      "ticketPrice": "Free",
+      "rawPrice": 0,
+      "registered": 340,
+      "date": "2026-11-02",
+      "organizer": "Elena Rostova"
+    },
+    {
+      "status": "draft",
+      "id": "evt-104",
+      "time": "10:00 AM",
+      "title": "Robotics Build Day � Open Workshop",
+      "category": "Workshop",
+      "description": "Hands-on robot build session. Draft pending final venue confirmation.",
+      "venue": "Maker Lab 2",
+      "capacity": 40,
+      "ticketPrice": "Free",
+      "rawPrice": 0,
+      "registered": 12,
+      "date": "2026-11-10",
+      "organizer": "Alex Rivera"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "tkt-1791682001871",
+      "ticketNumber": "SKY-TKT-751391",
+      "eventId": "evt-102",
+      "eventTitle": "AI & Machine Learning Career Workshop",
+      "userId": "demo-member",
+      "userName": "Alex Johnson",
+      "qrToken": "QR-TOKEN-SKY-TKT-751391-1791682001871",
+      "status": "VALID",
+      "paymentRef": "PAY-SANDBOX-1791682001871",
+      "paidAmount": 5,
+      "createdAt": "2026-10-11T01:26:41.871Z"
+    },
+    {
+      "id": "tkt-1001",
+      "userName": "Alex Johnson",
+      "eventTitle": "HackCampus 2026: 24-Hour Innovation Sprint",
+      "createdAt": "2026-10-01T10:00:00.000Z",
+      "paymentRef": "PAY-FREE-RSVP",
+      "ticketNumber": "SKY-TKT-9021",
+      "paidAmount": 0,
+      "status": "VALID",
+      "qrToken": "QR-SKY-9021-VALID-TOKEN",
+      "userId": "demo-member",
+      "eventId": "evt-101"
+    }
+  ],
+  "merchandise": [
+    {
+      "description": "Heavyweight 400gsm organic cotton hoodie with embroidered Skyline chest logo.",
+      "id": "prod-1",
+      "price": "$45.00",
+      "pickupLocation": "Campus Center Room 204",
+      "category": "Apparel",
+      "inStock": true,
+      "stockCount": 49,
+      "name": "Skyline Official Oversized Hoodie",
+      "rawPrice": 45
+    },
+    {
+      "description": "Double-wall vacuum insulated stainless steel water bottle. Keeps cold for 24 hours.",
+      "id": "prod-2",
+      "price": "$22.00",
+      "pickupLocation": "Campus Center Room 204",
+      "category": "Accessories",
+      "inStock": true,
+      "stockCount": 84,
+      "name": "Skyline Metal Tech Water Bottle (750ml)",
+      "rawPrice": 22
+    },
+    {
+      "description": "Durable vinyl matte finish stickers suitable for laptops, notebooks, and water bottles.",
+      "id": "prod-3",
+      "price": "$8.00",
+      "pickupLocation": "Campus Center Room 204",
+      "category": "Accessories",
+      "inStock": true,
+      "stockCount": 149,
+      "name": "Skyline Developer Sticker Pack (6 Pcs)",
+      "rawPrice": 8
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-1791682159215",
+      "orderNumber": "ORD-302178",
+      "userId": "demo-member",
+      "userName": "Alex Johnson",
+      "itemId": "prod-3",
+      "itemName": "Skyline Developer Sticker Pack (6 Pcs)",
+      "quantity": 1,
+      "totalPrice": 8,
+      "status": "CONFIRMED",
+      "paymentRef": "PAY-VERIFIED-126077",
+      "pickupLocation": "test ",
+      "createdAt": "2026-10-11T01:29:19.215Z"
+    },
+    {
+      "id": "ord-1791682146261",
+      "orderNumber": "ORD-784714",
+      "userId": "demo-member",
+      "userName": "Alex Johnson",
+      "itemId": "prod-2",
+      "itemName": "Skyline Metal Tech Water Bottle (750ml)",
+      "quantity": 1,
+      "totalPrice": 22,
+      "status": "CONFIRMED",
+      "paymentRef": "PAY-VERIFIED-530069",
+      "pickupLocation": "Campus Center Room 204",
+      "createdAt": "2026-10-11T01:29:06.261Z"
+    },
+    {
+      "id": "ord-1791682135659",
+      "orderNumber": "ORD-854972",
+      "userId": "demo-member",
+      "userName": "Alex Johnson",
+      "itemId": "prod-1",
+      "itemName": "Skyline Official Oversized Hoodie",
+      "quantity": 1,
+      "totalPrice": 45,
+      "status": "CONFIRMED",
+      "paymentRef": "PAY-VERIFIED-439562",
+      "pickupLocation": "Campus Center Room 204",
+      "createdAt": "2026-10-11T01:28:55.659Z"
+    },
+    {
+      "id": "ord-501",
+      "userName": "Alex Johnson",
+      "itemId": "prod-1",
+      "createdAt": "2026-10-05T14:30:00.000Z",
+      "paymentRef": "PAY-SANDBOX-98201",
+      "pickupLocation": "Campus Center Room 204",
+      "totalPrice": 45,
+      "status": "CONFIRMED",
+      "quantity": 1,
+      "orderNumber": "ORD-98201",
+      "userId": "demo-member",
+      "itemName": "Skyline Official Oversized Hoodie"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx-1791682159215",
+      "title": "Merchandise Purchase — Skyline Developer Sticker Pack (6 Pcs)",
+      "type": "income",
+      "amount": "+$8.00",
+      "rawAmount": 8,
+      "category": "Merchandise",
+      "method": "Credit Card (Sandbox Gateway)",
+      "ref": "PAY-VERIFIED-126077",
+      "notes": "Order #ORD-302178 by Alex Johnson",
+      "date": "2026-10-11"
+    },
+    {
+      "id": "tx-1791682146261",
+      "title": "Merchandise Purchase — Skyline Metal Tech Water Bottle (750ml)",
+      "type": "income",
+      "amount": "+$22.00",
+      "rawAmount": 22,
+      "category": "Merchandise",
+      "method": "Credit Card (Sandbox Gateway)",
+      "ref": "PAY-VERIFIED-530069",
+      "notes": "Order #ORD-784714 by Alex Johnson",
+      "date": "2026-10-11"
+    },
+    {
+      "id": "tx-1791682135659",
+      "title": "Merchandise Purchase — Skyline Official Oversized Hoodie",
+      "type": "income",
+      "amount": "+$45.00",
+      "rawAmount": 45,
+      "category": "Merchandise",
+      "method": "Credit Card (Sandbox Gateway)",
+      "ref": "PAY-VERIFIED-439562",
+      "notes": "Order #ORD-854972 by Alex Johnson",
+      "date": "2026-10-11"
+    },
+    {
+      "id": "tx-1791682045530",
+      "title": "test",
+      "type": "expense",
+      "amount": "-$270.00",
+      "rawAmount": 270,
+      "category": "Dues",
+      "method": "Bank Wire",
+      "ref": "TRX-6662",
+      "notes": "",
+      "date": "2026-10-11"
+    },
+    {
+      "ref": "TRX-9081",
+      "id": "tx-1",
+      "type": "income",
+      "method": "Bank Wire",
+      "category": "Sponsorship",
+      "notes": "Tier 1 Platinum Event Sponsorship for HackCampus 2026",
+      "date": "2026-10-08",
+      "title": "Sponsorship Grant � TechCorp Global",
+      "rawAmount": 3500,
+      "amount": "+$3,500.00"
+    },
+    {
+      "ref": "TRX-9082",
+      "id": "tx-2",
+      "type": "expense",
+      "method": "Corporate Card",
+      "category": "Equipment",
+      "notes": "3 microphones, projector, and dual speakers for career workshop",
+      "date": "2026-10-06",
+      "title": "Hall B Audio/Visual Equipment Rental",
+      "rawAmount": 420,
+      "amount": "-$420.00"
+    },
+    {
+      "ref": "TRX-9083",
+      "id": "tx-3",
+      "type": "expense",
+      "method": "Bank Wire",
+      "category": "Merchandise",
+      "notes": "200 printed cotton navy t-shirts for Fall semester inventory",
+      "date": "2026-10-04",
+      "title": "Merchandise Store T-Shirt Bulk Order",
+      "rawAmount": 850,
+      "amount": "-$850.00"
+    }
+  ],
+  "reimbursements": [
+    {
+      "id": "rmb-1",
+      "userName": "Sarah Jenkins",
+      "status": "Pending Approval",
+      "category": "Catering",
+      "notes": "Purchased 4 pizza boxes and soda drinks from Campus Diner",
+      "title": "Catering Snacks for AI Workshop",
+      "date": "2026-10-09",
+      "claimNumber": "CLM-104",
+      "userId": "mem-2",
+      "rawAmount": 145.5,
+      "amount": "$145.50"
+    },
+    {
+      "id": "rmb-2",
+      "userName": "Alex Rivera",
+      "status": "Approved",
+      "category": "Marketing",
+      "notes": "PrintShop invoice #8812 attached",
+      "title": "Poster Printing & Promotional Banners",
+      "date": "2026-10-07",
+      "claimNumber": "CLM-103",
+      "userId": "mem-3",
+      "rawAmount": 82,
+      "amount": "$82.00"
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann-1",
+      "pinned": true,
+      "audience": "All Members",
+      "category": "Meeting",
+      "author": "Komal Bhatia",
+      "date": "2026-10-10",
+      "body": "Join us this Thursday at 6:00 PM in Hall A for our monthly all-hands update. Agenda items include Fall hackathon logistics, budget allocations, and new member introductions.",
+      "title": "General Body Meeting Scheduled for Thursday",
+      "priority": "High"
+    },
+    {
+      "id": "ann-2",
+      "pinned": false,
+      "audience": "All Members",
+      "category": "Finance",
+      "author": "Alex Rivera",
+      "date": "2026-10-08",
+      "body": "Please submit all expense claims for September & early October events by Friday midnight. Late receipts will not be processed until the next financial cycle.",
+      "title": "Reimbursement Deadline for October Events",
+      "priority": "Medium"
+    }
+  ],
+  "volunteerTasks": [
+    {
+      "id": "tsk-1",
+      "assignee": "Sarah Jenkins",
+      "notes": "Ensure 2 tablets and QR code printed signs are ready by 8:30 AM.",
+      "progress": 50,
+      "status": "In Progress",
+      "dueDate": "2026-10-24",
+      "title": "Setup Welcome Desk & QR Scanner at Hall A",
+      "priority": "High",
+      "department": "Logistics"
+    },
+    {
+      "id": "tsk-2",
+      "assignee": "Elena Rostova",
+      "notes": "Exported in 1080x1080 and 1080x1920 formats for Instagram.",
+      "progress": 100,
+      "status": "Completed",
+      "dueDate": "2026-10-20",
+      "title": "Design Social Media Promo Banners",
+      "priority": "Medium",
+      "department": "Marketing"
+    }
+  ],
+  "fundraisingCampaigns": [
+    {
+      "endDate": "2026-11-30",
+      "id": "fnd-1",
+      "category": "Hardware",
+      "donorsCount": 28,
+      "raised": "$3,450.00",
+      "description": "Funding microcontrollers, motors, and 3D printing filament for our Maker Lab teams.",
+      "rawTarget": 5000,
+      "rawRaised": 3450,
+      "target": "$5,000.00",
+      "status": "Active",
+      "percentage": 69,
+      "title": "Annual Robot Build & Hardware Fund"
+    }
+  ]
+}

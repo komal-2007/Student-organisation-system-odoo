@@ -2,12 +2,17 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000
 const DATA_SYNC_EVENT = 'skyline:data-sync';
 
 function getHeaders() {
-  const sessionUser = sessionStorage.getItem('skyline-demo-session') || 'admin1';
-  return {
+  const sessionUser = sessionStorage.getItem('skyline-demo-session');
+  const headers = {
     'Content-Type': 'application/json',
-    Authorization: 'Bearer ' + sessionUser,
-    'X-User-Id': sessionUser,
   };
+
+  if (sessionUser) {
+    headers.Authorization = 'Bearer ' + sessionUser;
+    headers['X-User-Id'] = sessionUser;
+  }
+
+  return headers;
 }
 
 export function notifyDataRefresh(scope = 'all') {

@@ -48,7 +48,20 @@ export function MyReimbursements({ initialClaims = [] }) {
         if (!active) return;
         const currentUserId = user?.id || user?.username;
         const filtered = (res?.reimbursements || []).filter((claim) => {
-          const matchesUser = !currentUserId || claim.userId === currentUserId || claim.userName === user?.name;
+          const claimUserId = claim.userId || '';
+          const claimUserName = String(claim.userName || claim.memberName || '').toLowerCase();
+          const claimUsername = String(claim.username || '').toLowerCase();
+          const currentName = String(user?.name || '').toLowerCase();
+          const currentUsername = String(user?.username || '').toLowerCase();
+          const currentUserId = String(user?.id || user?.username || '').toLowerCase();
+
+          const matchesUser = !currentUserId
+            || claimUserId.toLowerCase() === currentUserId
+            || claimUserName === currentName
+            || claimUserName === currentUsername
+            || claimUsername === currentUsername
+            || claimUserName === String(user?.email || '').toLowerCase();
+
           return matchesUser;
         });
         setClaims(filtered);

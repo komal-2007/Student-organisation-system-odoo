@@ -47,10 +47,12 @@ const IconDownload = () => (
   </svg>
 );
 
-export function MyTickets({ tickets }) {
+export function MyTickets({ tickets = [] }) {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [qrVerifyStatus, setQrVerifyStatus] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
+
+  const displayValue = (value) => value || 'Not provided';
 
   const handleVerifyQr = async (ticket) => {
     setIsVerifying(true);
@@ -84,32 +86,39 @@ export function MyTickets({ tickets }) {
           <span className="skyline-badge badge-active">{tickets.length} Confirmed</span>
         </div>
 
+        {tickets.length === 0 ? (
+          <div className="admin-events-empty" style={{ padding: '32px 20px' }}>
+            <IconTicket />
+            <p className="admin-events-empty-title">No event passes yet</p>
+            <p className="admin-events-empty-sub">Your confirmed admissions will appear here after you reserve a pass.</p>
+          </div>
+        ) : (
         <div className="tickets-grid">
           {tickets.map((tkt) => (
             <div key={tkt.id} className="ticket-card-expanded">
               {/* Ticket Top */}
               <div className="ticket-card-top">
                 <span className="skyline-badge badge-approved">{tkt.status}</span>
-                <span className="ticket-tier-tag">{tkt.category}</span>
+                <span className="ticket-tier-tag">{displayValue(tkt.category)}</span>
               </div>
 
               {/* Title & Type */}
-              <h4 className="ticket-event-heading">{tkt.eventTitle}</h4>
-              <div className="ticket-type-label">{tkt.ticketType}</div>
+              <h4 className="ticket-event-heading">{displayValue(tkt.eventTitle)}</h4>
+              <div className="ticket-type-label">{displayValue(tkt.ticketType)}</div>
 
               {/* Meta Rows */}
               <div className="ticket-details-meta">
                 <div className="ticket-meta-row">
                   <IconCalendar />
-                  <span>{tkt.date}</span>
+                  <span>{displayValue(tkt.date)}</span>
                 </div>
                 <div className="ticket-meta-row">
                   <IconClock />
-                  <span>{tkt.time}</span>
+                  <span>{displayValue(tkt.time)}</span>
                 </div>
                 <div className="ticket-meta-row">
                   <IconMapPin />
-                  <span>{tkt.venue}</span>
+                  <span>{displayValue(tkt.venue)}</span>
                 </div>
               </div>
 
@@ -122,7 +131,7 @@ export function MyTickets({ tickets }) {
                 />
                 <div className="qr-info-wrap">
                   <span className="qr-code-label">TICKET ID</span>
-                  <code className="qr-code-id">{tkt.ticketNumber || tkt.ticketCode}</code>
+                  <code className="qr-code-id">{displayValue(tkt.ticketNumber || tkt.ticketCode)}</code>
                 </div>
               </div>
 
@@ -146,6 +155,7 @@ export function MyTickets({ tickets }) {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* ── Pass Detail Modal ── */}
@@ -161,10 +171,10 @@ export function MyTickets({ tickets }) {
                 {selectedTicket.status}
               </span>
               <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#101426', margin: '0 0 6px' }}>
-                {selectedTicket.eventTitle}
+                {displayValue(selectedTicket.eventTitle)}
               </h2>
               <p style={{ fontSize: '13px', color: '#667085', margin: '0 0 20px' }}>
-                {selectedTicket.ticketType}
+                {displayValue(selectedTicket.ticketType)}
               </p>
 
               <div style={{
@@ -184,7 +194,7 @@ export function MyTickets({ tickets }) {
                 />
                 <div style={{ marginTop: '10px' }}>
                   <code style={{ fontSize: '13px', fontWeight: 700, color: '#101426' }}>
-                    {selectedTicket.ticketNumber || selectedTicket.ticketCode}
+                    {displayValue(selectedTicket.ticketNumber || selectedTicket.ticketCode)}
                   </code>
                 </div>
               </div>
@@ -206,9 +216,9 @@ export function MyTickets({ tickets }) {
                 padding: '14px 18px',
                 fontSize: '13px'
               }}>
-                <div><strong>Date:</strong> {selectedTicket.date}</div>
-                <div><strong>Time:</strong> {selectedTicket.time}</div>
-                <div style={{ gridColumn: 'span 2' }}><strong>Venue:</strong> {selectedTicket.venue}</div>
+                <div><strong>Date:</strong> {displayValue(selectedTicket.date)}</div>
+                <div><strong>Time:</strong> {displayValue(selectedTicket.time)}</div>
+                <div style={{ gridColumn: 'span 2' }}><strong>Venue:</strong> {displayValue(selectedTicket.venue)}</div>
               </div>
             </div>
             <div className="skyline-modal-footer">
